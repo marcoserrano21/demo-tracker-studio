@@ -39,7 +39,6 @@ We assumed demo drives took **30 minutes**. Pilot data showed they actually aver
 3. **Intelligence** — Structured data, keyword-based issue flagging, and analytics that surface patterns invisible in manual workflows.
 
 ![Fleet Dashboard](./docs/screenshots/fleet-dashboard.png)
-*Screenshot placeholder — add assets to `docs/screenshots/`*
 
 ---
 
