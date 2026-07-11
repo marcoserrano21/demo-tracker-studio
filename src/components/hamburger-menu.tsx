@@ -28,6 +28,7 @@ interface HamburgerMenuProps {
   onManagerClick: () => void;
   onSwitchToAdvisor: () => void;
   todaysScheduledDrivesCount: number;
+  allowManagerAccess?: boolean;
 }
 
 const ICONS: { [key: string]: React.ElementType } = {
@@ -56,6 +57,7 @@ export function HamburgerMenu({
     onManagerClick,
     onSwitchToAdvisor,
     todaysScheduledDrivesCount,
+    allowManagerAccess = true,
 }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -135,7 +137,7 @@ export function HamburgerMenu({
                       <span className="transition-all duration-300">Switch to Advisor</span>
                     </div>
                  </Button>
-              ) : (
+              ) : allowManagerAccess ? (
                  <Button 
                    variant="ghost" 
                    className="justify-start w-full transition-all duration-300 rounded-xl hover:bg-gradient-to-r hover:from-blue-500/10 hover:via-blue-500/8 hover:to-blue-500/10 hover:shadow-lg hover:shadow-blue-500/10" 
@@ -146,7 +148,7 @@ export function HamburgerMenu({
                       <span className="transition-all duration-300">Manager Access</span>
                     </div>
                  </Button>
-              )}
+              ) : null}
               <div className="my-1">
                 <div className="h-px bg-gradient-to-r from-transparent via-border/60 to-transparent"/>
               </div>

@@ -93,7 +93,11 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                     {/* Battery & Actions Group */}
                     <div className="flex items-center gap-4">
                         <div className="min-w-[60px]">
-                            <BatteryIndicator level={vehicle.batteryLevel} />
+                            <BatteryIndicator
+                              level={vehicle.batteryLevel}
+                              source={vehicle.batterySource}
+                              syncedAt={vehicle.telemetrySyncedAt as number | undefined}
+                            />
                         </div>
                         <div className="w-[120px] flex justify-end">
                             {canCheckin ? (

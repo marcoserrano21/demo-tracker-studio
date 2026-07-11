@@ -142,7 +142,7 @@ export default function History({ driveLogs: initialDriveLogs, userRole, storeCo
             const headers = [
                 'vehicleModel', 'vehicleVin', 'coPilot', 'advisorIn', 'purpose', 
                 'startTime', 'endTime', 'expectedDuration', 'startBattery', 'endBattery', 
-                'feedback', 'issueDetected'
+                'feedback', 'issueDetected', 'customerPurchased'
             ] as const;
             
             const dataToExport = filteredLogs.map(log => {
@@ -164,7 +164,8 @@ export default function History({ driveLogs: initialDriveLogs, userRole, storeCo
                     startBattery: log.startBattery,
                     endBattery: log.endBattery || '',
                     feedback: log.feedback || '',
-                    issueDetected: log.issueDetected ? 'Yes' : 'No'
+                    issueDetected: log.issueDetected ? 'Yes' : 'No',
+                    customerPurchased: log.customerPurchased ? 'Yes' : 'No',
                 };
             });
 

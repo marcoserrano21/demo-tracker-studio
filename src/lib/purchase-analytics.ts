@@ -102,3 +102,23 @@ export function getAdvisorConversionRate(driveLogs: DriveLog[], advisorName: str
   if (demos.length === 0) return 0;
   return (demos.filter((log) => log.customerPurchased).length / demos.length) * 100;
 }
+
+/** Chart rows: order count per advisor from completed demo drives with a purchase */
+export function getAdvisorOrdersChartData(
+  driveLogs: DriveLog[],
+  advisors: { name: string }[],
+): Array<{ name: string; orders: number }> {
+  const ordersByAdvisor: Record<string, number> = {};
+
+  advisors.forEach((adv) => {
+    ordersByAdvisor[adv.name] = 0;
+  });
+
+  driveLogs
+    .filter((log) => log.purpose === 'Demo' && log.endTime && log.customerPurchased && log.coPilot)
+    .forEach((log) => {
+      ordersByAdvisor[log.coPilot!] = (ordersByAdvisor[log.coPilot!] || 0) + 1;
+    });
+
+  return Object.entries(ordersByAdvisor).map(([name, orders]) => ({ name, orders }));
+}

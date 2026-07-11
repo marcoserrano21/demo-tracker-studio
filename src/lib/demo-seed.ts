@@ -8,30 +8,31 @@ import {
   writeBatch,
   type Firestore,
 } from 'firebase/firestore';
-import type { Advisor, DriveLog, Vehicle } from './types';
+import type { Advisor, DriveLog, FsdOrderRecord, Vehicle } from './types';
 import { getStoreData, getVehicleImage, PREMIUM_LONG_WHEELBASE_TRIM } from './data';
 import { getLevelFromXP } from './xp-system';
 import { stripUndefined } from './utils';
+import {
+  DEMO_MANAGER_ADVISOR_NAME,
+  DEMO_RANDOM_ADVISOR_PROFILES,
+  getDemoAdvisorEmail,
+} from './demo-users';
 
 export const DEMO_STORE_CODE = 'clermont';
 const MIN_DEMO_DRIVE_LOGS = 20;
 
 const DEMO_ADVISOR_NAMES = [
-  'Marco Serrano',
-  'Alice Johnson',
-  'Bob Williams',
-  'Charlie Brown',
-  'Diana Miller',
-  'Ethan Davis',
+  DEMO_MANAGER_ADVISOR_NAME,
+  ...DEMO_RANDOM_ADVISOR_PROFILES.map((profile) => profile.name),
   'Fiona Garcia',
   'George Rodriguez',
 ] as const;
 
 const FEEDBACK_SAMPLES = [
   'Customer loved the acceleration and one-pedal driving.',
-  'Great demo — they are comparing trims this weekend.',
+  'Great demo — they are comparing trims this weekend. FSD subscribed.',
   'Smooth highway merge impressed the family.',
-  'Charging stop went well; customer asked about home install.',
+  'Charging stop went well; customer asked about home install. Full self-driving attached.',
   'Quiet cabin and screen UX were the highlights.',
 ];
 
@@ -154,13 +155,15 @@ function getDemoAdvisors(storeCode: string): Array<Advisor> {
     const match = fromData.find((a) => a.name === name);
     const baseXp = [4200, 3100, 2800, 2400, 2100, 1900, 1600, 1200][index] ?? 1000;
     const xp = baseXp;
+    const isManagerDemo = name === DEMO_MANAGER_ADVISOR_NAME;
+    const isRandomGuest = DEMO_RANDOM_ADVISOR_PROFILES.some((profile) => profile.name === name);
     return {
       id: `demo-advisor-${slugify(name)}`,
       storeId: storeCode,
       name,
-      email: match?.email ?? `${slugify(name)}@demo.local`,
-      role: name === 'Marco Serrano' ? 'moderator' : 'advisor',
-      defaultTab: name === 'Marco Serrano' ? 'fleet' : 'my-hub',
+      email: getDemoAdvisorEmail(name),
+      role: isManagerDemo ? 'moderator' : 'advisor',
+      defaultTab: isManagerDemo || isRandomGuest ? 'fleet' : 'my-hub',
       themePreference: 'dark',
       fontSize: 'base',
       fleetView: 'grid',
@@ -197,6 +200,8 @@ function generateDemoDriveLogs(
     const isCompleted = i > 2;
     const rating = purpose === 'Demo' && isCompleted ? (i % 5 === 0 ? 4 : 5) : undefined;
     const customerPurchased = purpose === 'Demo' && isCompleted && i % 7 === 0;
+    const fsdSubscribed =
+      purpose === 'Demo' && isCompleted && (i % 7 === 0 || i % 11 === 0 || feedbackIncludesFsd(i));
 
     logs.push({
       id: `demo-log-${String(i + 1).padStart(3, '0')}`,
@@ -216,9 +221,10 @@ function generateDemoDriveLogs(
       feedback: isCompleted && purpose === 'Demo' ? FEEDBACK_SAMPLES[i % FEEDBACK_SAMPLES.length] : undefined,
       rating,
       issueDetected: isCompleted && i % 11 === 0,
-      customerPurchased,
-      purchaseModel: customerPurchased ? vehicle.model : undefined,
-      purchaseTrim: customerPurchased ? vehicle.trim : undefined,
+      customerPurchased: customerPurchased || fsdSubscribed || undefined,
+      purchaseModel: customerPurchased || fsdSubscribed ? vehicle.model : undefined,
+      purchaseTrim: customerPurchased || fsdSubscribed ? vehicle.trim : undefined,
+      fsdSubscribed: fsdSubscribed || undefined,
       sentimentLabel: rating && rating >= 4 ? 'positive' : 'neutral',
     });
   }
@@ -254,6 +260,65 @@ function generateDemoDriveLogs(
   return logs;
 }
 
+function feedbackIncludesFsd(i: number): boolean {
+  const sample = FEEDBACK_SAMPLES[i % FEEDBACK_SAMPLES.length].toLowerCase();
+  return sample.includes('fsd') || sample.includes('self-driving') || sample.includes('self driving');
+}
+
+function generateDemoFsdOrders(
+  advisors: Advisor[],
+  driveLogs: Array<Omit<DriveLog, 'id'> & { id: string }>,
+  storeCode: string,
+): Array<Omit<FsdOrderRecord, 'id'> & { id: string }> {
+  const now = Date.now();
+  const records: Array<Omit<FsdOrderRecord, 'id'> & { id: string }> = [];
+
+  for (let i = 0; i < 18; i++) {
+    const advisor = advisors[i % advisors.length];
+    const daysAgo = i * 2;
+    const orderedAt = Timestamp.fromDate(new Date(now - daysAgo * 24 * 60 * 60 * 1000));
+    const source =
+      i % 3 === 0 ? 'order_placement' : i % 3 === 1 ? 'follow_up_call' : 'demo_checkin';
+    const fsdSubscribed = i % 4 !== 0 || source === 'demo_checkin';
+    records.push({
+      id: `demo-fsd-${String(i + 1).padStart(3, '0')}`,
+      storeId: storeCode,
+      customerLabel: `Cust ${String.fromCharCode(65 + (i % 26))}.${i + 1}`,
+      orderedAt,
+      fsdSubscribed,
+      source,
+      advisorId: advisor.id,
+      advisorName: advisor.name,
+      createdAt: orderedAt,
+      createdBy: advisor.name,
+      ...(source === 'follow_up_call' && fsdSubscribed
+        ? { convertedAt: orderedAt }
+        : {}),
+    });
+  }
+
+  driveLogs
+    .filter((log) => log.fsdSubscribed && log.endTime)
+    .slice(0, 6)
+    .forEach((log, idx) => {
+      records.push({
+        id: `demo-fsd-checkin-${String(idx + 1).padStart(3, '0')}`,
+        storeId: storeCode,
+        customerLabel: `Demo · ${log.vehicleModel} ···${log.vehicleVin.slice(-4)}`,
+        orderedAt: log.endTime as Timestamp,
+        fsdSubscribed: true,
+        source: 'demo_checkin',
+        advisorName: log.coPilot,
+        driveLogId: log.id,
+        notes: log.feedback,
+        createdAt: log.endTime as Timestamp,
+        createdBy: log.coPilot,
+      });
+    });
+
+  return records;
+}
+
 /**
  * Seeds the demo store with advisors (max 8), fleet, and drive history when data is sparse.
  * Idempotent: uses stable document IDs and merge writes.
@@ -275,6 +340,7 @@ export async function seedDemoStoreIfNeeded(
   const vehicles = getDemoVehicles(storeCode);
   const advisors = getDemoAdvisors(storeCode);
   const driveLogs = generateDemoDriveLogs(vehicles, advisors);
+  const fsdOrders = generateDemoFsdOrders(advisors, driveLogs, storeCode);
 
   const batch = writeBatch(firestore);
 
@@ -291,6 +357,11 @@ export async function seedDemoStoreIfNeeded(
   for (const log of driveLogs) {
     const { id, ...data } = log;
     batch.set(doc(firestore, `stores/${storeCode}/demo_drives`, id), stripUndefined(data), { merge: true });
+  }
+
+  for (const order of fsdOrders) {
+    const { id, ...data } = order;
+    batch.set(doc(firestore, `stores/${storeCode}/fsd_orders`, id), stripUndefined(data), { merge: true });
   }
 
   await batch.commit();

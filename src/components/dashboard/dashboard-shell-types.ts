@@ -1,4 +1,4 @@
-import type { Store, Vehicle, Advisor, UserRole, DriveLog } from '@/lib/types';
+import type { Store, Vehicle, Advisor, UserRole, DriveLog, FsdOrderRecord } from '@/lib/types';
 
 export interface DashboardLayoutProps {
   store: Store;
@@ -7,6 +7,7 @@ export interface DashboardLayoutProps {
   advisors: Advisor[];
   driveLogs: DriveLog[];
   driveLogsLoading?: boolean;
+  fsdOrders?: FsdOrderRecord[];
   userRole: UserRole;
   setUserRole: (role: UserRole) => void;
   onStoreChange: () => void;

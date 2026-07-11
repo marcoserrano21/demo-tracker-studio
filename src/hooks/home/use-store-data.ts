@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { Advisor, DriveLog, Store, Vehicle } from '@/lib/types';
+import type { Advisor, DriveLog, FsdOrderRecord, Store, Vehicle } from '@/lib/types';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
 import { collection, getDocs, limit, orderBy, query, where, Timestamp } from 'firebase/firestore';
 import { subDays, isToday } from 'date-fns';
-import { DRIVE_LOGS_DASHBOARD_LIMIT } from '@/lib/firestore-query-limits';
+import { DRIVE_LOGS_DASHBOARD_LIMIT, FSD_ORDERS_LIMIT } from '@/lib/firestore-query-limits';
 
 export function useStoreData(currentStore: Store | null) {
   const { firestore, user } = useFirebase();
@@ -79,6 +79,20 @@ export function useStoreData(currentStore: Store | null) {
   const { data: driveLogs, isLoading: areDriveLogsLoading } =
     useCollection<DriveLog>(driveLogsQuery);
 
+  const fsdOrdersQuery = useMemoFirebase(() => {
+    if (!currentStore || !firestore || !user) return null;
+    const ninetyDaysAgo = subDays(new Date(), 90);
+    return query(
+      collection(firestore, `stores/${currentStore.code}/fsd_orders`),
+      where('orderedAt', '>=', ninetyDaysAgo),
+      orderBy('orderedAt', 'desc'),
+      limit(FSD_ORDERS_LIMIT)
+    );
+  }, [currentStore, firestore, user]);
+
+  const { data: fsdOrders, isLoading: areFsdOrdersLoading } =
+    useCollection<FsdOrderRecord>(fsdOrdersQuery);
+
   const todaysScheduledDrivesCount = useMemo(() => {
     if (!driveLogs) return 0;
     return driveLogs.filter((log) => {
@@ -97,9 +111,11 @@ export function useStoreData(currentStore: Store | null) {
     vehicles,
     setVehicles,
     driveLogs,
+    fsdOrders: fsdOrders ?? [],
     areAdvisorsLoading,
     areVehiclesLoading,
     areDriveLogsLoading,
+    areFsdOrdersLoading,
     isAdvisorsFallbackLoading,
     todaysScheduledDrivesCount,
   };

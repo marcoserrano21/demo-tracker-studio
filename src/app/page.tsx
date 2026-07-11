@@ -28,6 +28,7 @@ function HomePageContent() {
     vehicles,
     setVehicles,
     driveLogs,
+    fsdOrders,
     areAdvisorsLoading,
     areVehiclesLoading,
     areDriveLogsLoading,
@@ -108,8 +109,13 @@ function HomePageContent() {
     setAdvisors([]);
     setVehicles([]);
     clearDdhubSession();
-    void clearStoreSession();
     handleSetUserRole('advisor');
+    void clearStoreSession().finally(() => {
+      // Hard navigate to the app entry URL (store selection / first-visit screen)
+      if (typeof window !== 'undefined') {
+        window.location.assign('/');
+      }
+    });
   };
 
   const handleSetUserRole = useCallback((role: UserRole) => {
@@ -166,6 +172,7 @@ function HomePageContent() {
             advisors={advisors}
             driveLogs={driveLogs ?? []}
             driveLogsLoading={areDriveLogsLoading}
+            fsdOrders={fsdOrders}
             userRole={userRole}
             setUserRole={handleSetUserRole}
             onStoreChange={clearStore}

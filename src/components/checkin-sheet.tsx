@@ -10,13 +10,14 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Loader2, CheckCircle, Star, Battery, User, ShoppingBag } from 'lucide-react';
+import { Loader2, CheckCircle, Star, Battery, User, ShoppingBag, Sparkles } from 'lucide-react';
 import { BatteryLevelPicker } from './battery-level-picker';
 import { useFirebase } from '@/firebase';
 import { doc, serverTimestamp, writeBatch, collection, Timestamp } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { detectIssuesFromKeywords } from '@/lib/issue-keywords';
+import { detectFsdSubscriptionFromKeywords } from '@/lib/fsd-keywords';
 import { findActiveDriveLog } from '@/lib/drive-log-utils';
 import { cn } from '@/lib/utils';
 import { awardXP } from '@/lib/xp-client';
@@ -57,6 +58,8 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [selectedAdvisor, setSelectedAdvisor] = useState<string>('');
   const [customerPurchased, setCustomerPurchased] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [fsdDetectedFromFeedback, setFsdDetectedFromFeedback] = useState(false);
   
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -73,6 +76,12 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
     setSelectedAdvisor('');
   }, [isOpen, driveLog, driveLogs, vehicle, advisors]);
 
+  useEffect(() => {
+    const detected = detectFsdSubscriptionFromKeywords(feedbackText);
+    setFsdDetectedFromFeedback(detected);
+    if (detected) setCustomerPurchased(true);
+  }, [feedbackText]);
+
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -81,6 +90,8 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
       setRating(0);
       setHoverRating(0);
       setCustomerPurchased(false);
+      setFeedbackText('');
+      setFsdDetectedFromFeedback(false);
     }
     setIsOpen(open);
   };
@@ -122,6 +133,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
       batch.update(vehicleRef, {
         status: 'Available',
         batteryLevel: numericEndBattery,
+        batterySource: 'manual',
       });
       
       batch.commit()
@@ -181,9 +193,13 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
     }
     
     let issueDetected = false;
+    const fsdFromKeywords = detectFsdSubscriptionFromKeywords(feedback || '');
     if (feedback) {
         issueDetected = detectIssuesFromKeywords(feedback);
     }
+
+    const purchased = (customerPurchased || fsdFromKeywords) && activeDriveLog.purpose === 'Demo';
+    const fsdSubscribed = fsdFromKeywords && activeDriveLog.purpose === 'Demo';
 
     const newStatus = issueDetected ? 'Needs Attention' : 'Available';
 
@@ -205,6 +221,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
     const vehicleUpdateData: any = {
         status: newStatus,
         batteryLevel: numericEndBattery,
+        batterySource: 'manual',
         currentDriveId: null,
         driveStartedAt: null,
         expectedDuration: null,
@@ -223,10 +240,29 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
         driveLogUpdateData.rating = rating;
     }
 
-    if (customerPurchased && activeDriveLog.purpose === 'Demo') {
+    if (purchased) {
         driveLogUpdateData.customerPurchased = true;
         driveLogUpdateData.purchaseModel = vehicle.model;
         driveLogUpdateData.purchaseTrim = vehicle.trim;
+    }
+
+    if (fsdSubscribed) {
+        driveLogUpdateData.fsdSubscribed = true;
+        const fsdOrderRef = doc(collection(firestore, `stores/${storeCode}/fsd_orders`));
+        const creditedAdvisor = advisors.find(a => a.name === (activeDriveLog.coPilot || advisor));
+        batch.set(fsdOrderRef, {
+            storeId: storeCode,
+            customerLabel: `Demo · ${vehicle.model} ···${vehicle.vin.slice(-4)}`,
+            orderedAt: Timestamp.now(),
+            fsdSubscribed: true,
+            source: 'demo_checkin',
+            advisorId: creditedAdvisor?.id,
+            advisorName: activeDriveLog.coPilot || advisor,
+            driveLogId: activeDriveLog.id,
+            notes: feedback || undefined,
+            createdAt: serverTimestamp(),
+            createdBy: advisor,
+        });
     }
 
     batch.update(driveLogRef, driveLogUpdateData);
@@ -250,9 +286,12 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
     batch.commit()
       .then(async () => {
         setIsOpen(false);
-        const description = customerPurchased
-          ? `Vehicle checked in successfully. Customer purchase of ${vehicle.model} ${vehicle.trim} recorded.`
-          : `Vehicle checked in ${issueDetected ? 'with an issue' : 'successfully'}.`;
+        let description = `Vehicle checked in ${issueDetected ? 'with an issue' : 'successfully'}.`;
+        if (fsdSubscribed) {
+          description = 'FSD subscription + order recorded from feedback. Vehicle checked in.';
+        } else if (purchased) {
+          description = `Vehicle checked in successfully. Customer purchase of ${vehicle.model} ${vehicle.trim} recorded.`;
+        }
         toast({ title: 'Success', description });
 
         if (activeDriveLog.purpose === 'Demo') {
@@ -265,7 +304,8 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
               reviewLength: feedback ? countParagraphs(feedback) : 0,
               issueFound: issueDetected,
               isWeekend,
-              customerPurchased,
+              customerPurchased: purchased,
+              fsdSubscribed,
             });
             const xpResult = await awardXP(firestore, storeCode, creditedAdvisor.id, xpCalculation.totalXP);
             if (xpResult.success && xpCalculation.totalXP > 0) {
@@ -350,9 +390,17 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
                   />
                   <Textarea
                     name="feedback"
-                    placeholder="Customer loved the acceleration. Noted a slight rattle in the passenger door…"
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Customer loved the acceleration. FSD subscribed. Noted a slight rattle…"
                     className="min-h-[108px] rounded-xl border border-border/60 bg-background/80 resize-none focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
+                  {fsdDetectedFromFeedback && (
+                    <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      FSD subscription + order will be recorded from feedback
+                    </p>
+                  )}
                 </DriveFlowSection>
 
                 <DriveFlowSection>

@@ -437,7 +437,23 @@ export const achievements: Achievement[] = [
         description: 'Provided a clear, safe, and effective demonstration of Autopilot/Full Self-Driving.',
         category: 'Knowledge & Evangelism',
         iconUrl: '/media/autopilot.png',
-        checker: (advisor, driveLogs) => false, // Manual award
+        checker: (advisor, driveLogs) =>
+            getCompletedDrives(driveLogs).some(
+                (log) =>
+                    log.fsdSubscribed ||
+                    (log.feedback &&
+                        /autopilot|full self[- ]?driving|\bfsd\b/i.test(log.feedback) &&
+                        !/malfunction|fault|issue|problem/i.test(log.feedback)),
+            ),
+    },
+    {
+        id: 'fsd-closer',
+        title: 'FSD Closer',
+        description: 'Recorded 3 Full Self-Driving (Supervised) subscription attaches from demos or follow-ups.',
+        category: 'Knowledge & Evangelism',
+        iconUrl: '/media/autopilot.png',
+        checker: (advisor, driveLogs) =>
+            getCompletedDrives(driveLogs).filter((log) => log.fsdSubscribed).length >= 3,
     },
     {
         id: 'matchmaker',
@@ -445,7 +461,12 @@ export const achievements: Achievement[] = [
         description: 'Had a customer drive the same model and color they ended up purchasing.',
         category: 'Knowledge & Evangelism',
         iconUrl: '/media/matchmaker.png',
-        checker: (advisor, driveLogs) => false, // Manual award
+        checker: (advisor, driveLogs) =>
+            getCompletedDrives(driveLogs).some(
+                (log) =>
+                    log.customerPurchased &&
+                    (!log.purchaseModel || log.purchaseModel === log.vehicleModel),
+            ),
     },
     // Category 5: Quirky & Fun
     {

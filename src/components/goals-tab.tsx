@@ -212,6 +212,8 @@ export default function GoalsTab({ advisors, storeCode, storeName, goals, curren
         current = targetLogs.filter(l => l.sentimentLabel === 'positive').length;
     } else if (goal.metric === 'charging_sessions') {
         current = targetLogs.filter(l => l.purpose === 'Charging').length;
+    } else if (goal.metric === 'fsd_attaches') {
+        current = targetLogs.filter(l => l.fsdSubscribed).length;
     }
 
     const percentage = Math.min((current / goal.targetValue) * 100, 100);
@@ -281,6 +283,7 @@ export default function GoalsTab({ advisors, storeCode, storeName, goals, curren
                         <SelectItem value="drives">Drives</SelectItem>
                         <SelectItem value="positive_feedback">Positive Feedback</SelectItem>
                         <SelectItem value="charging_sessions">Charging Sessions</SelectItem>
+                        <SelectItem value="fsd_attaches">FSD Attaches</SelectItem>
                     </SelectContent>
                 </Select>
              </div>

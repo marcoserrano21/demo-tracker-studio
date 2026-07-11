@@ -9,10 +9,12 @@ export type UserRole = 'advisor' | 'manager' | 'moderator';
 export type SortKey = 'model' | 'battery-desc' | 'battery-asc' | 'date-added' | 'popularity';
 export type SentimentLabel = 'positive' | 'negative' | 'neutral';
 export type FleetView = 'grid' | 'compact' | 'list' | 'carousel';
-export type GoalMetric = 'drives' | 'positive_feedback' | 'charging_sessions';
+export type GoalMetric = 'drives' | 'positive_feedback' | 'charging_sessions' | 'fsd_attaches';
 export type GoalTimeframe = 'daily' | 'weekly' | 'monthly';
 export type CardHoverEffect = 'holographic' | 'blur';
 export type ButtonHoverEffect = 'default' | 'arrow';
+export type BatterySource = 'manual' | 'fleet_api';
+export type FsdOrderSource = 'order_placement' | 'follow_up_call' | 'demo_checkin';
 
 
 export interface Vehicle {
@@ -36,6 +38,12 @@ export interface Vehicle {
   soldDate?: Timestamp;
   /** Stored for ops/export only — not shown on the public Fleet view */
   licensePlate?: string;
+  /** OEM / manual telemetry */
+  latitude?: number;
+  longitude?: number;
+  locationUpdatedAt?: Timestamp | number;
+  batterySource?: BatterySource;
+  telemetrySyncedAt?: Timestamp | number;
 }
 
 export type ThemePreference = 'system' | 'light' | 'dark' | 'high-contrast';
@@ -114,6 +122,25 @@ export interface DriveLog {
   customerPurchased?: boolean;
   purchaseModel?: string;
   purchaseTrim?: string;
+  /** FSD Monthly Subscription attached (check-in keywords or explicit). */
+  fsdSubscribed?: boolean;
+}
+
+export interface FsdOrderRecord {
+  id: string;
+  storeId: string;
+  /** Soft identifier for ops (initials / order ref) — avoid PII in portfolio demos */
+  customerLabel: string;
+  orderedAt: Timestamp | number | Date;
+  fsdSubscribed: boolean;
+  source: FsdOrderSource;
+  advisorId?: string;
+  advisorName?: string;
+  driveLogId?: string;
+  convertedAt?: Timestamp | number | Date;
+  notes?: string;
+  createdAt?: Timestamp | number | Date;
+  createdBy: string;
 }
 
 export interface Goal {

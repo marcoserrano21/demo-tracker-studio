@@ -1,13 +1,17 @@
 'use client';
 
-import { BatteryFull, BatteryMedium, BatteryLow, BatteryWarning } from 'lucide-react';
+import { BatteryFull, BatteryMedium, BatteryLow, BatteryWarning, Radio } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import type { BatterySource } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface BatteryIndicatorProps {
   level: number;
+  source?: BatterySource;
+  syncedAt?: number | { toMillis?: () => number };
 }
 
-export default function BatteryIndicator({ level }: BatteryIndicatorProps) {
+export default function BatteryIndicator({ level, source, syncedAt }: BatteryIndicatorProps) {
   const getBatteryColor = () => {
     if (level > 70) return 'text-green-500';
     if (level > 30) return 'text-yellow-500';
@@ -21,6 +25,14 @@ export default function BatteryIndicator({ level }: BatteryIndicatorProps) {
     return <BatteryWarning className={`h-5 w-5 ${getBatteryColor()}`} />;
   };
 
+  const isLive = source === 'fleet_api';
+  const syncLabel = (() => {
+    if (!syncedAt) return null;
+    const ms = typeof syncedAt === 'number' ? syncedAt : syncedAt.toMillis?.();
+    if (!ms) return null;
+    return new Date(ms).toLocaleString();
+  })();
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -30,10 +42,19 @@ export default function BatteryIndicator({ level }: BatteryIndicatorProps) {
             <span className={`text-sm font-semibold ${getBatteryColor()}`}>
               {level}%
             </span>
+            {isLive && (
+              <Radio
+                className={cn('h-3 w-3 text-emerald-500')}
+                aria-label="Live telemetry"
+              />
+            )}
           </div>
         </TooltipTrigger>
         <TooltipContent>
           <p>Battery Level: {level}%</p>
+          <p className="text-xs opacity-80">
+            {isLive ? `Live · Fleet API${syncLabel ? ` · ${syncLabel}` : ''}` : 'Manual entry'}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

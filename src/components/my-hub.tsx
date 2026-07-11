@@ -20,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { AchievementIcon } from './achievement-icon';
 import { subDays, format, startOfWeek, endOfWeek, isWithinInterval, isToday, startOfToday, endOfToday } from 'date-fns';
 import { Button } from './ui/button';
-import { Camera, ChevronLeft, ChevronRight, Trophy, Car, Star, TrendingUp, TrendingDown, Minus, ThumbsUp, ThumbsDown, Meh, Target, CheckCircle, Clock, ArrowUpDown, MessageSquare, Coffee, Eye, Unlock, ShoppingBag } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, Trophy, Car, Star, TrendingUp, TrendingDown, Minus, ThumbsUp, ThumbsDown, Meh, Target, CheckCircle, Clock, ArrowUpDown, MessageSquare, Coffee, Eye, Unlock, ShoppingBag, Sparkles } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Timestamp, doc, collection, query, where } from 'firebase/firestore';
 import { AvatarSelectorDialog } from './avatar-selector-dialog';
@@ -409,6 +409,7 @@ export default function MyHub({ advisor, driveLogs, vehicles, advisors, storeCod
     return {
         totalDrives: completedDrives.length,
         purchaseConversions: completedDrives.filter(log => log.customerPurchased).length,
+        fsdAttaches: completedDrives.filter(log => log.fsdSubscribed).length,
         conversionRate: getAdvisorConversionRate(driveLogs, advisor.name),
         achievementsUnlocked: unlockedAchievements.length,
         leaderboardRank,
@@ -710,6 +711,22 @@ export default function MyHub({ advisor, driveLogs, vehicles, advisors, storeCod
                       </div>
                     </div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Purchase notes</p>
+                  </div>
+                </div>
+
+                {/* FSD Attaches */}
+                <div className="group relative overflow-hidden">
+                  <div className="relative p-2 sm:p-3 bg-gradient-to-br from-sky-500/8 via-cyan-400/4 to-transparent rounded-lg sm:rounded-xl border border-sky-500/20 transition-all duration-300 hover:border-sky-500/40 hover:shadow-lg hover:shadow-sky-500/10">
+                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-500/20 flex items-center justify-center">
+                        <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg sm:text-xl font-bold">{userStats.fsdAttaches}</div>
+                        <div className="text-[10px] sm:text-xs font-medium text-muted-foreground">FSD Attaches</div>
+                      </div>
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Subscriptions</p>
                   </div>
                 </div>
 

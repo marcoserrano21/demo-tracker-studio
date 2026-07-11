@@ -9,7 +9,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange?logo=firebase)](https://firebase.google.com/)
 [![PWA](https://img.shields.io/badge/PWA-enabled-purple)](https://web.dev/progressive-web-apps/)
 
-**[Live Demo](#)** · **[Walkthrough](https://player.vimeo.com/video/1165516041)** · **[About](/about)** · **[GitHub](https://github.com/marcoserrano21)** · **[LinkedIn](https://www.linkedin.com/in/marco-serrano25/)**
+**[Live Demo](https://demo-tracker-studio.vercel.app/)** · **[Walkthrough](https://player.vimeo.com/video/1165516041)** · **[About](/about)** · **[GitHub](https://github.com/marcoserrano21)** · **[LinkedIn](https://www.linkedin.com/in/marco-serrano25/)**
 
 ---
 
@@ -56,6 +56,15 @@ Maintenance issues flagged via **keyword-based pattern matching** on advisor fee
 ### Demo-to-Sale Analytics
 Track which models and trims convert after demos. Per-advisor conversion rates, purchase breakdowns by model/trim, and Copilot-of-the-Month recognition for managers.
 
+### FSD Subscription Tracking
+Keyword detection at check-in flags FSD (Supervised) monthly subscription attaches from advisor feedback. Management **FSD Orders** tab, take-rate KPIs, weekly charts, advisor attach breakdown, and coach-moment copy in Analytics. New achievements: `first-conversion`, `closer`, `hot-closer`, `fsd-closer`.
+
+### Fleet Attention Strip
+Tappable chips on the fleet view filter vehicles by **low battery**, **overdue**, and **needs attention** so managers spot problems before customers do.
+
+### Optional Fleet Telemetry
+Plug-and-play **Tesla Fleet API** adapter (`TESLA_*` env vars). Managers sync live battery % and GPS from Management; vehicle cards show telemetry badges and map links when credentials are configured.
+
 ### Custom Chart Builder
 14 pre-built analytics presets plus a Power BI–style chart builder with **PNG, JPG, and PDF export** — managers answer operational questions without waiting for reports.
 
@@ -85,8 +94,9 @@ Installable on mobile and tablet with service worker v3, offline fallback page, 
 Skip link, reduce-motion preference, font scaling, and high-contrast theme — built for a loud, fast sales floor.
 
 ### Portfolio & Demo Mode
-- **Try Demo Store** — one-click entry with auto-seeded sample fleet (Clermont store)
-- **`/about`** — full case study with security architecture write-up
+- **Try Demo Store** — one-click entry with auto-seeded sample fleet (Clermont store); 5 rotating guest identities
+- **`/about`** — portfolio case study with honest security notes and AI-assisted build section
+- **[Notion case study](https://app.notion.com/p/The-Demo-Drive-Hub-28dc2787689780abbd0dda2d88ff91c4)** — full narrative for recruiters
 - **`/contact`**, **`/privacy`**, **`/terms`** — legal and contact pages
 - Portfolio demo banner for public visitors
 
@@ -155,13 +165,15 @@ flowchart LR
   end
   subgraph optional [Optional]
     Redis[Upstash_Redis]
+    TeslaAPI[Tesla_Fleet_API]
   end
   NextJS --> Shell
   NextJS --> ServerActions
   NextJS --> Auth
   ServerActions --> RateLimit
   RateLimit --> Redis
-  NextJS --> Auth
+  ServerActions --> TeslaAPI
+  TeslaAPI --> Firestore
   NextJS --> Firestore
   Auth --> Rules
   Firestore --> Rules
@@ -212,6 +224,7 @@ Dashboard listeners are bounded to keep Firestore reads predictable:
 | Resource | Limit |
 |---|---|
 | Drive logs (dashboard) | 500 records / 30 days |
+| FSD orders | 500 records |
 | Manual awards | 100 records |
 | Goals | 50 records |
 | History tab | 500 records per date range |
@@ -237,7 +250,8 @@ Fleet renders immediately; history and analytics show skeletons until bounded qu
 | Phase | Focus |
 |---|---|
 | **Now** | Offline-first PWA enhancements (partial — store Wi-Fi is unreliable) |
-| **Vision** | OEM API integration for live battery/GPS telemetry |
+| **Ready** | Plug-and-play Tesla Fleet API adapter (`TESLA_*` env vars) for live battery/GPS — sync from Management when credentials are approved |
+| **Vision** | Fleet Telemetry streaming + vehicle command protocol after partner pairing |
 | **Vision** | Cross-store analytics for regional fleet and demand planning |
 
 ---
@@ -273,6 +287,7 @@ See [`.env.example`](.env.example). Key groups:
 | `DEMO_STORE_CODE` / `DEMO_STORE_PASSWORD` | One-click demo entry (defaults to Clermont) |
 | `MANAGER_PASSWORD_OVERRIDE_EMAIL` / `MANAGER_PASSWORD_OVERRIDE` | Optional manager override |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Optional distributed auth rate limiting |
+| `TESLA_CLIENT_ID` / `TESLA_CLIENT_SECRET` / `TESLA_REFRESH_TOKEN` / `TESLA_AUDIENCE` | Optional live fleet telemetry sync |
 
 Passwords are not published in this README.
 
@@ -287,6 +302,7 @@ Passwords are not published in this README.
 
 ## Demo Access
 
+- **Live app:** https://demo-tracker-studio.vercel.app/
 - **Portfolio visitors:** Click **Try Demo Store** on the login screen — auto-seeds a sample fleet with drive history
 - **Full store access:** Contact [Marco Serrano on LinkedIn](https://www.linkedin.com/in/marco-serrano25/) for credentials
 - **Case study:** Visit [`/about`](/about) for metrics, security architecture, and stack details

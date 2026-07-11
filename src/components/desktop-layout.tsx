@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
+import { canRequestManagerAccess } from '@/lib/demo-users';
 
 const DesktopSidebarTrigger = () => {
     const { state, toggleSidebar } = useSidebar();
@@ -84,6 +85,7 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
   });
 
   const primaryTabs = PRIMARY_DASHBOARD_TABS;
+  const allowManagerAccess = canRequestManagerAccess(advisor);
 
   const handleManagerLoginSuccess = () => {
     setUserRole('manager');
@@ -191,7 +193,7 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
                                     Switch to Advisor
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-                        ) : (
+                        ) : allowManagerAccess ? (
                             <SidebarMenuItem>
                                 <SidebarMenuButton 
                                     onClick={() => setAuthDialogOpen(true)} 
@@ -202,7 +204,7 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
                                     Manager Access
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-                        )}
+                        ) : null}
                         {userRole === 'manager' && (
                             <SidebarMenuItem>
                                 <SidebarMenuButton 

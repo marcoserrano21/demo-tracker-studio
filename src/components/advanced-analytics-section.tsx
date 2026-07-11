@@ -3,7 +3,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart as BarChartIcon, Users, Clock, TrendingUp, UserCheck, Zap, Eye, EyeOff, Filter, X, BatteryCharging, UserRoundCheck, Hourglass, Star, Trophy, CheckCircle, TrendingDown, Minus, FileText, Timer, AlertCircle } from 'lucide-react';
+import { BarChart as BarChartIcon, Users, Clock, TrendingUp, UserCheck, Zap, Eye, EyeOff, Filter, X, BatteryCharging, UserRoundCheck, Hourglass, Star, Trophy, CheckCircle, TrendingDown, Minus, FileText, Timer, AlertCircle, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer, LabelList, ScatterChart, Scatter, Label } from 'recharts';
 import { ArrowUpDown } from 'lucide-react';
@@ -41,6 +41,8 @@ const chartConfig = {
   },
    completed: { label: "Completed", color: "hsl(var(--chart-2))" },
   inProgress: { label: "In Progress", color: "hsl(var(--chart-5))" },
+  orders: { label: "Orders", color: "hsl(var(--chart-2))" },
+  purchases: { label: "Purchases", color: "hsl(var(--chart-2))" },
 } as const;
 
 
@@ -78,6 +80,8 @@ interface AdvancedAnalyticsSectionProps {
     drivesByDayData: any[];
     peakHoursData: any[];
     coPilotPerformanceData: any[];
+    purchaseChartData: Array<{ name: string; purchases: number; advisor: string }>;
+    storePurchaseConversionRate: number;
     drivesByTrimData: any[];
     coPilotDurationData: any[];
     batteryLeaderboard: any[];
@@ -113,6 +117,8 @@ export default function AdvancedAnalyticsSection({
     drivesByDayData,
     peakHoursData,
     coPilotPerformanceData,
+    purchaseChartData,
+    storePurchaseConversionRate,
     drivesByTrimData,
     coPilotDurationData,
     batteryLeaderboard,
@@ -192,6 +198,41 @@ export default function AdvancedAnalyticsSection({
                 </CardContent>
             </Card>
         </div>
+            <Card className="border-border/40">
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                        <CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <ShoppingBag className="w-4 h-4 text-primary" />
+                            Demo-to-sale by advisor &amp; model
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          Purchases recorded at check-in, grouped by model and trim (not VIN).
+                          Store rate: {storePurchaseConversionRate.toFixed(1)}%
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                {purchaseChartData.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">
+                    No purchase conversions in this period. Advisors mark sales at check-in under Sales outcome.
+                  </p>
+                ) : (
+                  <ChartContainer config={chartConfig} className="h-[350px] w-full">
+                      <BarChart data={purchaseChartData} layout="vertical" margin={{ left: 8, right: 16 }} barCategoryGap={15}>
+                          <CartesianGrid horizontal={false} />
+                          <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tick={{fontSize: 10}} interval={0} width={140} />
+                          <XAxis type="number" allowDecimals={false} />
+                          <Tooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="purchases" fill="var(--color-purchases)" radius={[0, 4, 4, 0]}>
+                              <LabelList dataKey="purchases" position="right" offset={8} className="fill-foreground text-xs" formatter={(value: number) => value > 0 ? value : ''} />
+                          </Bar>
+                      </BarChart>
+                  </ChartContainer>
+                )}
+            </CardContent>
+        </Card>
             <Card className="border-border/40">
             <CardHeader>
                 <div className="flex justify-between items-start">

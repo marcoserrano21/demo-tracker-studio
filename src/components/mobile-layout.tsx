@@ -14,6 +14,7 @@ import { DashboardTabPanels } from './dashboard/dashboard-tab-panels';
 import type { DashboardLayoutProps } from './dashboard/dashboard-shell-types';
 import { useDashboardShell } from '@/hooks/dashboard/use-dashboard-shell';
 import { PRIMARY_MOBILE_TAB_ICONS, getSecondaryMobileTabIcons } from '@/lib/dashboard-tabs';
+import { canRequestManagerAccess } from '@/lib/demo-users';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +58,7 @@ export default function MobileLayout(props: DashboardLayoutProps) {
   });
 
   const secondaryTabs = getSecondaryMobileTabIcons(userRole);
+  const allowManagerAccess = canRequestManagerAccess(advisor);
   if (!secondaryTabs.some((tab) => tab.value === 'settings')) {
     secondaryTabs.push({ value: 'settings', label: 'Settings', icon: 'Settings' });
   }
@@ -64,7 +66,7 @@ export default function MobileLayout(props: DashboardLayoutProps) {
   const handleConfirmation = () => {
     if (!confirmationAction) return;
     if (confirmationAction === 'switchAdvisor') onSwitchAdvisor();
-    if (confirmationAction === 'changeStore') onStoreChange();
+    if (confirmationAction === 'changeStore' || confirmationAction === 'logout') onStoreChange();
     setConfirmationAction(null);
   };
 
@@ -84,11 +86,12 @@ export default function MobileLayout(props: DashboardLayoutProps) {
           userRole={userRole}
           activeTab={shell.activeTab}
           handleTabChange={shell.handleTabChange}
-          onStoreChange={() => setConfirmationAction('changeStore')}
+          onStoreChange={() => setConfirmationAction('logout')}
           onSwitchAdvisor={() => setConfirmationAction('switchAdvisor')}
           onManagerClick={() => setAuthDialogOpen(true)}
           onSwitchToAdvisor={() => setUserRole('advisor')}
           todaysScheduledDrivesCount={todaysScheduledDrivesCount}
+          allowManagerAccess={allowManagerAccess}
         />
       </Header>
       <DemoBanner />

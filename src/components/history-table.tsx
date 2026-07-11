@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { format, intervalToDuration } from 'date-fns';
 import { formatMinutesToHoursAndMinutes } from '@/lib/utils';
 import { Badge } from './ui/badge';
-import { ArrowDown, ArrowUp, Car, User, Calendar, Clock, Battery, Trash2, UserCheck, Timer, MessageSquare, AlertCircle, CheckCircle, Edit, ChevronDown, ChevronRight, Star } from 'lucide-react';
+import { ArrowDown, ArrowUp, Car, User, Calendar, Clock, Battery, Trash2, UserCheck, Timer, MessageSquare, AlertCircle, CheckCircle, Edit, ChevronDown, ChevronRight, Star, ShoppingBag } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import { Button } from './ui/button';
 import {
@@ -52,6 +52,34 @@ function getNameInitials(name?: string | null): string {
 function formatVinSuffix(vin?: string | null): string {
   if (!vin) return 'N/A';
   return `...${vin.slice(-6)}`;
+}
+
+type CustomerOrderStatus = 'Order placed' | 'No order' | 'Pending' | 'N/A';
+
+function getCustomerOrderStatus(log: DriveLog): CustomerOrderStatus {
+  if (log.purpose !== 'Demo') return 'N/A';
+  if (!log.endTime) return 'Pending';
+  if (log.customerPurchased) return 'Order placed';
+  return 'No order';
+}
+
+function renderCustomerOrderBadge(log: DriveLog) {
+  const status = getCustomerOrderStatus(log);
+  switch (status) {
+    case 'Order placed':
+      return (
+        <Badge className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600">
+          <ShoppingBag className="mr-1 h-3 w-3" />
+          Order placed
+        </Badge>
+      );
+    case 'No order':
+      return <Badge variant="outline" className="whitespace-nowrap">No order</Badge>;
+    case 'Pending':
+      return <Badge variant="secondary" className="whitespace-nowrap">Pending</Badge>;
+    default:
+      return <Badge variant="outline" className="whitespace-nowrap text-muted-foreground">N/A</Badge>;
+  }
 }
 
 interface HistoryTableProps {
@@ -208,6 +236,7 @@ export default function HistoryTable({ driveLogs, userRole, storeCode, paginatio
                       </div>
                       {userRole === 'manager' && <div className="flex items-center"><Battery className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Battery:</strong> <span className="ml-1">{renderBatteryChange(log.startBattery, log.endBattery)}</span></div>}
                       {log.feedback && <div className="flex items-start"><MessageSquare className="w-4 h-4 mr-2 mt-0.5 text-muted-foreground" /> <strong>Feedback:</strong> <p className="ml-1 break-words leading-relaxed">{log.feedback}</p></div>}
+                      <div className="flex items-center"><ShoppingBag className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Customer order:</strong> <span className="ml-2">{renderCustomerOrderBadge(log)}</span></div>
                   </div>
                    {userRole === 'manager' && (
                     <div className="flex justify-end space-x-2 pt-4">
@@ -253,6 +282,7 @@ export default function HistoryTable({ driveLogs, userRole, storeCode, paginatio
                   <TableHead className="min-w-[150px] text-center">Check-in Co-Pilot</TableHead>
                   <TableHead className="min-w-[150px]">Time In</TableHead>
                   <TableHead className="min-w-[100px]">Duration</TableHead>
+                  <TableHead className="min-w-[130px]">Customer Order</TableHead>
                   <TableHead className="min-w-[200px]">Feedback/Issues</TableHead>
                   {userRole === 'manager' && (
                     <TableHead className="text-right min-w-[100px]">Actions</TableHead>
@@ -300,6 +330,7 @@ export default function HistoryTable({ driveLogs, userRole, storeCode, paginatio
                     </TableCell>
                     <TableCell>{formatDateTime(log.endTime)}</TableCell>
                     <TableCell>{getDuration(log)}</TableCell>
+                    <TableCell>{renderCustomerOrderBadge(log)}</TableCell>
                     <TableCell className="max-w-xs">
                         <div className="truncate whitespace-normal">
                             {log.issueDetected ? (

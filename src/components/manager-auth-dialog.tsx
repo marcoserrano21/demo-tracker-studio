@@ -17,6 +17,7 @@ import { Label } from './ui/label';
 import { KeyRound, Loader2 } from 'lucide-react';
 import { verifyManagerAccess } from '@/app/auth/actions';
 import type { Advisor } from '@/lib/types';
+import { canRequestManagerAccess } from '@/lib/demo-users';
 
 interface ManagerAuthDialogProps {
   isOpen: boolean;
@@ -50,7 +51,17 @@ export default function ManagerAuthDialog({
     setIsLoading(true);
     setError('');
 
-    const result = await verifyManagerAccess(password, currentAdvisor.email);
+    if (!canRequestManagerAccess(currentAdvisor)) {
+      setError('Manager access is not available for portfolio demo guest accounts.');
+      setIsLoading(false);
+      return;
+    }
+
+    const result = await verifyManagerAccess(
+      password,
+      currentAdvisor.email,
+      currentAdvisor.name
+    );
 
     if (result.success) {
       toast({

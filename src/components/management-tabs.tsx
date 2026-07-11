@@ -38,7 +38,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlusCircle, Edit, Trash2, CheckCircle, Loader2, RefreshCw, Trash, Users, UserCheck, Car, ArrowUpDown, ArrowUp, ArrowDown, Award, MoreVertical, Shield, GoalIcon, Search, Download } from 'lucide-react';
-import type { Advisor, Vehicle, VehicleIssue, VehicleStatus, ManualAward, UserRole, Goal, DriveLog } from '@/lib/types';
+import type { Advisor, Vehicle, VehicleIssue, VehicleStatus, ManualAward, UserRole, Goal, DriveLog, FsdOrderRecord } from '@/lib/types';
 import { VehicleForm } from './vehicle-form';
 import { useFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch, getDocs, query, where, updateDoc } from 'firebase/firestore';
@@ -66,6 +66,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { StoreOperationsSettings } from './management/store-operations-settings';
+import { FsdOrdersTab } from './management/fsd-orders-tab';
+import { TelemetrySyncButton } from './management/telemetry-sync-button';
 
 
 const AwardsTab = lazy(() => import('./awards-tab'));
@@ -87,6 +89,7 @@ interface ManagementTabsProps {
   manualAwards: ManualAward[];
   goals: Goal[];
   driveLogs: DriveLog[];
+  fsdOrders?: FsdOrderRecord[];
 }
 
 const ITEMS_PER_PAGE = 5;
@@ -116,7 +119,8 @@ export default function ManagementTabs({
   currentAdvisor,
   manualAwards,
   goals,
-  driveLogs
+  driveLogs,
+  fsdOrders = [],
 }: ManagementTabsProps) {
   const { firestore } = useFirebase();
   const [editingAdvisor, setEditingAdvisor] = useState<Advisor | null>(null);
@@ -772,6 +776,7 @@ export default function ManagementTabs({
     { value: 'vehicles', label: 'Fleet' },
     { value: 'advisors', label: 'Advisors' },
     ...((isManager || isModerator) ? [{ value: 'goals', label: 'Goals' }] : []),
+    { value: 'fsd', label: 'FSD Orders' },
     { value: 'issues', label: 'Issues' },
     { value: 'operations', label: 'Store' },
     ...(isSuperAdmin ? [{ value: 'awards', label: 'Awards' }] : []),
@@ -824,6 +829,13 @@ export default function ManagementTabs({
                       <CardDescription className="mt-1.5 text-sm">
                         Add, edit, or remove vehicles from this store.
                       </CardDescription>
+                      <div className="mt-3">
+                        <TelemetrySyncButton
+                          storeCode={storeCode}
+                          vehicles={vehicles}
+                          onVehiclesUpdate={onVehiclesUpdate}
+                        />
+                      </div>
                     </div>
                     <div className="relative w-full sm:w-auto md:max-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -1273,6 +1285,14 @@ export default function ManagementTabs({
                     </React.Suspense>
                 </TabsContent>
            )}
+          <TabsContent value="fsd" className="mt-6">
+            <FsdOrdersTab
+              storeCode={storeCode}
+              advisors={advisors}
+              fsdOrders={fsdOrders}
+              currentAdvisorName={currentAdvisor.name}
+            />
+          </TabsContent>
           <TabsContent value="issues" className="mt-6">
                <Card className="border-border/40">
                 <CardHeader className="pb-4 border-b bg-gradient-to-r from-background via-muted/20 to-background">

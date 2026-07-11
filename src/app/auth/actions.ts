@@ -6,6 +6,7 @@ import {
   verifyManagerPassword,
   getDemoStoreCredentials,
 } from '@/lib/auth/store-passwords';
+import { canRequestManagerAccess } from '@/lib/demo-users';
 import { AUTH_RATE_LIMIT, consumeRateLimit } from '@/lib/auth/rate-limit';
 
 const COOKIE_STORE = 'ddhub-store';
@@ -66,12 +67,23 @@ export async function verifyStoreAccess(
 
 export async function verifyManagerAccess(
   password: string,
-  advisorEmail?: string
+  advisorEmail?: string,
+  advisorName?: string
 ): Promise<{ success: boolean; error?: string }> {
   const jar = await cookies();
   const storeCode = jar.get(COOKIE_STORE)?.value;
   if (!storeCode) {
     return { success: false, error: 'Store session required. Please log in to a store first.' };
+  }
+
+  if (
+    advisorName &&
+    !canRequestManagerAccess({ name: advisorName, email: advisorEmail ?? '' })
+  ) {
+    return {
+      success: false,
+      error: 'Manager access is not available for portfolio demo guest accounts.',
+    };
   }
 
   const limit = await consumeRateLimit(

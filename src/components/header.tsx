@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ManagerAuthDialog from './manager-auth-dialog';
 import { ThemeToggle } from './theme-toggle';
+import { canRequestManagerAccess } from '@/lib/demo-users';
 import type { LucideIcon } from 'lucide-react';
 
 interface HeaderProps {
@@ -27,6 +28,7 @@ interface HeaderProps {
 
 export default function Header({ storeName, userRole, setUserRole, onStoreChange, storeCode, children, currentAdvisor }: HeaderProps) {
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false);
+  const allowManagerAccess = canRequestManagerAccess(currentAdvisor);
 
   const handleManagerLoginSuccess = () => {
     setUserRole('manager');
@@ -62,12 +64,12 @@ export default function Header({ storeName, userRole, setUserRole, onStoreChange
                     <ShieldCheck className="mr-2 h-4 w-4 text-green-500" />
                     <span className="hidden sm:inline">Manager Mode</span>
                 </Button>
-            ) : (
+            ) : allowManagerAccess ? (
                 <Button variant="outline" size="sm" onClick={() => setAuthDialogOpen(true)}>
                     <Shield className="mr-2 h-4 w-4"/>
                     <span className="hidden sm:inline">Manager Access</span>
                 </Button>
-            )}
+            ) : null}
         </div>
       </div>
       <ManagerAuthDialog 

@@ -13,6 +13,7 @@ export const XP_REWARDS = {
   STREAK_BONUS_MULTIPLIER: 0.1, // 10% bonus per streak day (max 5 days)
   WEEKEND_BONUS: 5, // Extra XP for weekend drives
   CUSTOMER_PURCHASE: 50,
+  FSD_ATTACH: 35,
 } as const;
 
 // Level System Configuration
@@ -135,6 +136,7 @@ export function calculateDriveXP(params: {
   streakDays?: number;
   isWeekend?: boolean;
   customerPurchased?: boolean;
+  fsdSubscribed?: boolean;
 }): {
   baseXP: number;
   bonuses: Array<{ reason: string; amount: number }>;
@@ -182,6 +184,12 @@ export function calculateDriveXP(params: {
     bonuses.push({ reason: 'Customer Purchase', amount: XP_REWARDS.CUSTOMER_PURCHASE });
     totalXP += XP_REWARDS.CUSTOMER_PURCHASE;
   }
+
+  // FSD Monthly Subscription attach bonus
+  if (params.fsdSubscribed) {
+    bonuses.push({ reason: 'FSD Attach', amount: XP_REWARDS.FSD_ATTACH });
+    totalXP += XP_REWARDS.FSD_ATTACH;
+  }
   
   return {
     baseXP: XP_REWARDS.DRIVE_COMPLETED,
@@ -200,6 +208,7 @@ export function calculateHistoricalXP(logs: Array<{
   feedback?: string;
   issueDetected?: boolean;
   customerPurchased?: boolean;
+  fsdSubscribed?: boolean;
   issuesReported?: string[];
   checkoutTime?: { seconds: number } | any;
   endTime?: { seconds: number } | any;
@@ -234,6 +243,10 @@ export function calculateHistoricalXP(logs: Array<{
 
     if (log.customerPurchased) {
       totalXP += XP_REWARDS.CUSTOMER_PURCHASE;
+    }
+
+    if (log.fsdSubscribed) {
+      totalXP += XP_REWARDS.FSD_ATTACH;
     }
     
     // Weekend bonus

@@ -22,6 +22,7 @@ import { useFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Table, TableBody, TableHeader, TableRow, TableHead } from './ui/table';
 import VehicleCarousel from './vehicle-carousel';
+import { FleetAttentionStrip } from './fleet-attention-strip';
 
 interface VehicleGridProps {
   vehicles: Vehicle[];
@@ -38,6 +39,8 @@ interface VehicleGridProps {
 
 const modelOrder: VehicleModel[] = ['Model S', 'Model 3', 'Model X', 'Model Y', 'Cybertruck', 'Roadster'];
 const statusOptions: (VehicleStatus | 'All')[] = ['All', 'Available', 'On Demo', 'Charging', 'Scheduled', 'Needs Attention'];
+
+type AttentionFilter = 'low-battery' | 'overdue' | 'Needs Attention' | null;
 
 const trimOrder: Record<VehicleModel, string[]> = {
     'Model S': ['All-Wheel Drive', 'Plaid'],
@@ -58,6 +61,7 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     const [exteriorColorFilter, setExteriorColorFilter] = useState<string>('all');
     const [interiorColorFilter, setInteriorColorFilter] = useState<string>('all');
     const [wheelFilter, setWheelFilter] = useState<string>('all');
+    const [attentionFilter, setAttentionFilter] = useState<AttentionFilter>(null);
     
     const { firestore } = useFirebase();
 
@@ -111,7 +115,7 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     }, [driveLogs]);
     
     const hasAdvancedFilters = trimFilter !== 'all' || exteriorColorFilter !== 'all' || interiorColorFilter !== 'all' || wheelFilter !== 'all';
-    const hasAnyFilter = searchTerm !== '' || statusFilter !== 'All' || hasAdvancedFilters;
+    const hasAnyFilter = searchTerm !== '' || statusFilter !== 'All' || hasAdvancedFilters || attentionFilter !== null;
 
     const resetFilters = () => {
         setSearchTerm('');
@@ -120,6 +124,16 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
         setExteriorColorFilter('all');
         setInteriorColorFilter('all');
         setWheelFilter('all');
+        setAttentionFilter(null);
+    };
+
+    const handleAttentionFilter = (id: 'low-battery' | 'overdue' | 'Needs Attention') => {
+        setAttentionFilter((prev) => (prev === id ? null : id));
+        if (id === 'Needs Attention') {
+            setStatusFilter('Needs Attention');
+        } else {
+            setStatusFilter('All');
+        }
     };
 
     const sortedAndFilteredVehicles = useMemo(() => {
@@ -139,7 +153,16 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                 const interiorColorMatch = interiorColorFilter === 'all' || vehicle.interiorColor === interiorColorFilter;
                 const wheelMatch = wheelFilter === 'all' || vehicle.wheelSize === wheelFilter;
 
-                return searchMatch && statusMatch && trimMatch && exteriorColorMatch && interiorColorMatch && wheelMatch;
+                let attentionMatch = true;
+                if (attentionFilter === 'low-battery') {
+                    attentionMatch = vehicle.batteryLevel < 30;
+                } else if (attentionFilter === 'overdue') {
+                    attentionMatch = !!vehicle.overdue && vehicle.status === 'On Demo';
+                } else if (attentionFilter === 'Needs Attention') {
+                    attentionMatch = vehicle.status === 'Needs Attention';
+                }
+
+                return searchMatch && statusMatch && trimMatch && exteriorColorMatch && interiorColorMatch && wheelMatch && attentionMatch;
             });
         
         if (sortKey === 'date-added') {
@@ -179,7 +202,7 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                         return trimAIndex - trimBIndex;
                 }
             });
-    }, [vehicles, searchTerm, statusFilter, sortKey, trimFilter, exteriorColorFilter, interiorColorFilter, wheelFilter, driveLogs]);
+    }, [vehicles, searchTerm, statusFilter, sortKey, trimFilter, exteriorColorFilter, interiorColorFilter, wheelFilter, driveLogs, attentionFilter]);
     
     const gridUlClass = cn(
         "grid grid-cols-1 gap-4 sm:gap-6",
@@ -294,6 +317,11 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                     <div className="text-muted-foreground">Here is the current status of your vehicle fleet for {storeName}.</div>
                 </div>
             </div>
+            <FleetAttentionStrip
+              vehicles={vehicles}
+              activeFilter={attentionFilter}
+              onFilterStatus={handleAttentionFilter}
+            />
             <div className="flex flex-col md:flex-row gap-4 justify-between">
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                     <div className="relative w-full sm:w-auto md:flex-1 md:max-w-xs">

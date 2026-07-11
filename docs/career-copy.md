@@ -1,129 +1,135 @@
-# Career copy — Marco Serrano (paste into LinkedIn / portfolio)
+# Career copy — Marco Serrano
 
-Use these as starting points. Adjust tone to match each platform's character limits.
+Paste into LinkedIn, X, portfolio site, or recruiter DMs. Voice: sharp, human, story-first. No corporate filler.
 
 ---
 
 ## Featured Blurb (≤150 chars)
 
-Real-time EV demo fleet app I built solo. 147 drives, zero double-bookings, 50 achievements. Security + analytics inside.
+Built Demo Drive Hub on the EV sales floor. 147 drives logged. Zero double-bookings. Live demo + case study inside.
 
 ---
 
-## Project Post (~1,200–1,800 chars)
+## Project Post (LinkedIn / X long post)
 
 Twenty-five minutes.
 
-That's how long it took one advisor to confirm a demo vehicle was available — walking between a customer, a whiteboard, and a group chat while momentum drained from the showroom floor.
+That is how long one advisor spent confirming a demo car was available. Customer waiting. Whiteboard in the back. Group chat blowing up. Momentum gone.
 
-That moment is why I built **Demo Drive Hub**.
+I watched that happen on a Saturday rush and built **Demo Drive Hub** because the best moment in EV retail was running on memory and erased markers.
 
-I'm Marco Serrano — retail advisor, product builder, and the person who got tired of watching the most exciting part of the EV sales experience run on erased whiteboards and buried group-chat photos.
+Five to six weeks later I had a mobile-first PWA on the floor:
 
-So I designed and shipped a full-stack, mobile-first PWA in ~5–6 weeks — then hardened it for portfolio showcase with production-grade security and demo mode:
+- Real-time fleet dashboard (grid, compact, list, carousel)
+- Check-in/out in under 30 seconds
+- Demo-to-sale tracking by model and trim
+- FSD attach detection from feedback keywords
+- 50 achievements, 99-level XP, Hall of Fame
+- 14 chart presets + custom builder with PNG/PDF export
+- Fleet attention strip: low battery, overdue, needs attention
+- Optional live telemetry when Fleet API credentials are set
+- Try Demo Store with auto-seeded fleet for portfolio visitors
 
-→ Real-time fleet dashboard (grid, compact, list, carousel views)
-→ Digital check-in/out (~30 seconds vs. 5+ minutes manual)
-→ **Demo-to-sale analytics** by model/trim + conversion rates
-→ **Custom chart builder** — 14 presets, PNG/JPG/PDF export
-→ **50 achievements**, 99-level XP, Hall of Fame, goals & manager awards
-→ Keyword-based maintenance flagging — no paid AI required
-→ **Two-layer security**: httpOnly cookies + Firebase custom claims per store
-→ PWA with offline fallback, install prompt, and app shortcuts
-→ Responsive mobile / tablet / desktop shells + accessibility (reduce motion, high-contrast)
+**Pilot numbers** (independent project, not an official org tool):
 
-**Pilot results** *(independent portfolio project — not an official org tool)*:
+- ~50% less demo admin time
+- 147 drives logged in ~1.5 months
+- 12 advisors onboarded in 2 weeks
+- Zero double-bookings after launch
+- 8 maintenance issues flagged early
+- Real avg drive: 57 min, not the assumed 30
 
-• ~50% reduction in demo drive admin time
-• 147 demo drives logged in the first ~1.5 months
-• 12 advisors onboarded in 2 weeks (~15 in the pilot)
-• Zero double-bookings after launch
-• 8 maintenance issues flagged early
-• Discovered avg demo duration: **57 min** (not the assumed 30)
-• Peak demand: weekends, 12–2 PM and 5 PM
+One advisor said it felt like someone finally turned the lights on.
 
-One pilot user put it simply: *"It feels like someone finally turned the lights on."*
+**Stack:** Next.js 16, React 19, TypeScript, Firebase, shadcn/ui, Recharts, PWA on Vercel.
 
-**Stack:** Next.js 16 · React 19 · TypeScript · Firebase Admin · Firestore · shadcn/ui · Recharts · PWA · Vercel Hobby
+**Lesson that stuck:** change management beat code. The pilot worked. Advisors used it. Without org sponsorship, adoption plateaued. So I turned it into a portfolio piece with a live demo, Notion case study, and honest write-up at /about.
 
-The biggest lesson? **Change management beat technical difficulty.** The pilot worked — advisors loved it — but without org sponsorship, adoption plateaued. I turned that into a portfolio showcase with a live demo, `/about` case study, and security architecture recruiters can actually evaluate.
-
-🔗 Live demo: [PLACEHOLDER — Vercel URL]
-💻 GitHub: https://github.com/marcoserrano21
-🎥 Walkthrough: https://player.vimeo.com/video/1165516041
-📄 Case study: /about
-
-#ProductDesign #NextJS #Firebase #UX #Portfolio #FullStack
+Try it: https://demo-tracker-studio.vercel.app/
+Case study: https://app.notion.com/p/The-Demo-Drive-Hub-28dc2787689780abbd0dda2d88ff91c4
+Walkthrough: https://player.vimeo.com/video/1165516041
+GitHub: https://github.com/marcoserrano21
 
 ---
 
-## About Section Addition (200–300 words)
+## About Section Addition (~230 words)
 
-I'm a product-minded builder who goes from showroom observation to shipped software. My flagship portfolio project, **Demo Drive Hub**, is a full-stack web app I designed and built in roughly five to six weeks while working in premium EV retail — including a brief stint at Tesla that gave me firsthand context for the problem, not an official product mandate.
+I build where data, design, and product overlap. My flagship project, **Demo Drive Hub**, started on the EV retail floor when I watched a 25-minute availability check kill a customer's excitement.
 
-The workflow was broken: demo fleet operations ran on whiteboards, group chats, and memory. Confirming vehicle availability could take 25 minutes. We assumed 30-minute drives; real data showed 57. I built a mobile-first PWA with real-time fleet visibility, digital check-in/out, demo-to-sale conversion tracking, a custom chart builder with export, 50 achievements across a 99-level XP system, and keyword-based maintenance flagging — all without requiring paid AI.
+I designed and shipped a mobile-first PWA in about five to six weeks: real-time fleet visibility, 30-second check-in/out, demo-to-sale analytics, FSD attach tracking, keyword-based maintenance flagging, 50 achievements, a custom chart builder, and optional live fleet telemetry. No paid AI required for core workflows.
 
-In a live pilot, the app logged 147 demo drives in about six weeks, onboarded 12 advisors in two, eliminated double-bookings, and flagged eight maintenance issues early. Pilot users called it seamless and user-friendly enough to teach in minutes.
+In a live pilot: 147 drives logged, 12 advisors onboarded in two weeks, zero double-bookings, eight issues flagged early. Pilot users called it seamless enough to teach in minutes.
 
-For the portfolio showcase, I added production-grade security — Firebase custom claims for per-store isolation, auth rate limiting, bounded Firestore queries, and a full case study at `/about`. Visitors can try the app instantly via **Try Demo Store** with an auto-seeded sample fleet.
+For the public showcase I added Try Demo Store with auto-seeded data, a Notion case study, bounded Firestore queries, httpOnly session cookies, and responsive mobile/tablet/desktop layouts. The security story is honest: portfolio-grade, not enterprise multi-tenant.
 
-**Demo Drive Hub is an independent portfolio project — not affiliated with or endorsed by Tesla, Inc.** I built and piloted it in a retail context, learned that unofficial tools need organizational sponsorship to scale, and refined it into a public showcase of product thinking plus engineering depth. I work at the intersection of UX, data, and full-stack development — turning operational friction into systems people actually want to use.
+**Demo Drive Hub is an independent portfolio project.** Not affiliated with or endorsed by Tesla, Inc. I built and piloted it in retail, learned that unofficial tools need sponsorship to scale, and refined it into proof I can go from floor friction to shipped product.
+
+Open to UI/UX design, AI/product engineering, and digital marketing roles where storytelling and systems thinking both matter.
+
+Portfolio: https://marco-serrano.netlify.app
 
 ---
 
 ## Experience Bullets
 
-- **Designed, built, and deployed Demo Drive Hub** — a mobile-first PWA for EV retail demo fleet operations — in ~5–6 weeks using Next.js 16, React 19, TypeScript, Firebase Admin, and shadcn/ui
-- **Reduced demo drive admin time ~50%** in pilot; logged **147 drives in ~1.5 months** with **zero double-bookings** after launch
-- **Shipped demo-to-sale analytics**, custom chart builder (14 presets, PNG/PDF export), and **50 achievements** across a **99-level XP system**
-- **Implemented two-layer security** — httpOnly session cookies + Firebase custom claims with per-store Firestore rules and auth rate limiting
-- **Built portfolio demo mode** with auto-seeded fleet, `/about` case study, PWA install + offline fallback, and responsive mobile/tablet/desktop shells
-- **Pivoted unofficial pilot into portfolio showcase**, documenting change-management lessons on org adoption vs. technical feasibility
+- Built **Demo Drive Hub**, a mobile-first EV demo fleet PWA in ~5–6 weeks (Next.js 16, React 19, Firebase, shadcn/ui)
+- Cut demo admin time **~50%** in pilot; logged **147 drives** with **zero double-bookings**
+- Shipped demo-to-sale analytics, FSD attach tracking, chart builder export, and **50 achievements** across a **99-level XP** system
+- Added fleet attention strip, optional Tesla Fleet API telemetry sync, and Try Demo Store with auto-seeded portfolio data
+- Pivoted unofficial pilot into portfolio showcase; documented change-management lesson on org adoption vs. technical build
 
 ---
 
 ## Headline Option (≤220 chars)
 
-Full-Stack Product Builder | UI/UX · Built Demo Drive Hub — real-time EV fleet ops with security architecture, demo-to-sale analytics & PWA · 147 drives, zero double-bookings
+Product Builder · UI/UX · Built Demo Drive Hub on the EV sales floor · fleet ops, conversion analytics, PWA · 147 drives, zero double-bookings
 
 ---
 
 ## Resume One-Liner (≤25 words)
 
-Built Demo Drive Hub, a Next.js PWA with per-store security, demo-to-sale analytics, and 50 achievements — cutting EV demo admin time ~50% in pilot.
+Built Demo Drive Hub, a Next.js PWA cutting EV demo admin time ~50% with conversion analytics, FSD tracking, and 147 logged drives in pilot.
 
 ---
 
-## LinkedIn headline (pick one)
+## X Thread (10 posts)
 
-**Option A (recommended)**  
-Product Builder · UI/UX · Data & EV Retail Ops · I diagnose friction and ship the fix
+1. Twenty-five minutes to confirm one demo car was free. Customer waiting. Whiteboard in the back. That Saturday is why I built Demo Drive Hub.
 
-**Option B**  
-Customer Experience Specialist → Product Builder · Next.js · Firebase Admin · Demo Drive Hub
+2. Demo drives are the peak moment in EV retail. Behind the scenes it was whiteboards, group chats, and erased data every night.
 
-**Option C (design-forward)**  
-UI/UX-minded builder · Full-stack product · Security + analytics · Open to design & AI product roles
+3. We assumed 30-minute drives. Pilot data said 57. That 27-minute gap was the scheduling chaos nobody could see.
 
----
+4. I built a mobile-first PWA in ~5–6 weeks. Check-in under 30 seconds. Live fleet status. One tap, not a walk to the office.
 
-## Featured project blurb (LinkedIn Featured / resume)
+5. Keyword detection flags maintenance issues from advisor feedback. No paid AI. Rattles, scratches, warning lights. Vehicle moves to Needs Attention automatically.
 
-**Demo Drive Hub** — Full-stack EV demo fleet platform
-Designed and built end-to-end: UX for sales-floor advisors (30-second check-in, visual battery picker, demo-to-sale tracking), manager analytics with chart builder export, two-layer security (Firebase custom claims), PWA with offline fallback, and 50-achievement gamification. Multi-store pilot; now a public portfolio showcase with live demo mode.
+6. Demo-to-sale tracking by model and trim. FSD attach detection. 50 achievements. Managers get charts they can export as PNG or PDF.
 
----
+7. Pilot: ~50% less admin time. 147 drives logged. 12 advisors in 2 weeks. Zero double-bookings. 8 issues caught early.
 
-## Portfolio site hero (marco-serrano.netlify.app)
+8. Lesson: change management beat code. Advisors loved it. Without org sponsorship, adoption plateaued. Valid lesson, not a failure.
 
-**Headline:** I turn operational chaos into products people use on the job.
+9. Reframed it as a portfolio showcase. Try Demo Store. Notion case study. Live walkthrough. Honest security notes at /about.
 
-**Subhead:** Retail advisor by day, product builder always. Demo Drive Hub cut demo admin time in half and ships with production-grade security. Pursuing UI/UX design, AI product, and digital marketing roles.
-
-**CTA:** View case study · Try live demo · Download resume
+10. Independent project. Not affiliated with Tesla. Built on the floor, shipped for the web. Try it: https://demo-tracker-studio.vercel.app/
 
 ---
 
-## One-liner for recruiters (DM / email)
+## TikTok / Reels Hooks (pick one)
 
-I'm a CX specialist who ships — built Demo Drive Hub (Next.js/Firebase Admin) with per-store security, demo-to-sale analytics, and 50 achievements. Cut admin time ~50%, logged 147 drives, zero double-bookings. Portfolio + live demo linked; targeting UI/UX, AI product, and growth/marketing roles.
+**Hook A (problem):** "Twenty-five minutes. That is how long it took to check if a demo car was free. I built the fix."
+
+**Hook B (data):** "We thought demo drives took 30 minutes. The data said 57. One number explained all the Saturday chaos."
+
+**Hook C (lesson):** "The hardest part was not the code. It was getting an unofficial tool adopted without org backing."
+
+**Hook D (demo):** "I built a full fleet ops app on the EV sales floor in six weeks. Here is what actually moved the needle."
+
+**Close line:** "Demo Drive Hub. Independent portfolio project. Link in bio."
+
+---
+
+## One-liner for recruiters
+
+CX specialist who ships. Built Demo Drive Hub (Next.js/Firebase) on the sales floor: ~50% less admin time, 147 drives, zero double-bookings. Portfolio + live demo linked.

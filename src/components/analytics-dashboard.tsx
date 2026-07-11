@@ -3,7 +3,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, Suspense, lazy, useRef } from 'react';
-import type { DriveLog, Advisor, UserRole, VehicleModel } from '@/lib/types';
+import type { DriveLog, Advisor, UserRole, VehicleModel, FsdOrderRecord } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart as BarChartIcon, Users, Award, Clock, TrendingUp, UserCheck, Zap, Eye, EyeOff, Filter, X, BatteryCharging, UserRoundCheck, Hourglass, Star, Trophy, CheckCircle, TrendingDown, Minus, FileText, ClipboardList, AlertCircle, SlidersHorizontal, Check, BarChart3, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,13 @@ import { Progress } from './ui/progress';
 import { ChartBuilderUI } from './chart-builder-ui';
 import { getPresetById } from '@/lib/chart-builder/chart-presets';
 import type { ChartConfig } from '@/lib/chart-builder';
-import { getPurchaseChartData, getStorePurchaseConversionRate } from '@/lib/purchase-analytics';
+import { getPurchaseChartData, getStorePurchaseConversionRate, getAdvisorOrdersChartData } from '@/lib/purchase-analytics';
+import {
+  filterFsdOrdersByDateRange,
+  getFsdTakeRate,
+  getFsdWeeklyTakeRateChartData,
+  getFsdCoachMoment,
+} from '@/lib/fsd-analytics';
 import { ShoppingBag } from 'lucide-react';
 
 
@@ -50,6 +56,7 @@ interface AnalyticsDashboardProps {
   advisors: Advisor[];
   userRole: UserRole;
   storeName: string;
+  fsdOrders?: FsdOrderRecord[];
 }
 
 type SortKey = 'name' | 'drives_desc' | 'drives_asc' | 'duration_desc' | 'duration_asc';
@@ -82,7 +89,8 @@ const QUICK_ANALYTICS_PRESETS = [
 ] as const;
 
 
-export default function AnalyticsDashboard({ driveLogs, advisors, userRole, storeName }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard({ driveLogs, advisors, userRole, storeName, fsdOrders = [] }: AnalyticsDashboardProps) {
+  const { toast } = useToast();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [renderAdvanced, setRenderAdvanced] = useState(false);
   const [chartBuilderOpen, setChartBuilderOpen] = useState(false);
@@ -129,6 +137,7 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
   const [drivesByAdvisorSort, setDrivesByAdvisorSort] = useState<SortKey>('drives_desc');
   const [drivesByTrimSort, setDrivesByTrimSort] = useState<SortKey>('drives_desc');
   const [coPilotPerformanceSort, setCoPilotPerformanceSort] = useState<SortKey>('drives_desc');
+  const [advisorOrdersSort, setAdvisorOrdersSort] = useState<SortKey>('drives_desc');
   const [coPilotDurationSort, setCoPilotDurationSort] = useState<SortKey>('duration_desc');
 
   useEffect(() => {
@@ -289,6 +298,28 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
       () => getPurchaseChartData(filteredDriveLogs),
       [filteredDriveLogs],
     );
+
+    const filteredFsdOrders = useMemo(() => {
+      if (!dateRange?.from) return [];
+      const from = startOfDay(dateRange.from);
+      const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+      return filterFsdOrdersByDateRange(fsdOrders, from, to);
+    }, [fsdOrders, dateRange]);
+
+    const previousFilteredFsdOrders = useMemo(() => {
+      if (!previousDateRange?.from) return [];
+      const from = startOfDay(previousDateRange.from);
+      const to = previousDateRange.to ? endOfDay(previousDateRange.to) : endOfDay(previousDateRange.from);
+      return filterFsdOrdersByDateRange(fsdOrders, from, to);
+    }, [fsdOrders, previousDateRange]);
+
+    const fsdTakeRate = useMemo(() => getFsdTakeRate(filteredFsdOrders), [filteredFsdOrders]);
+    const previousFsdTakeRate = useMemo(() => getFsdTakeRate(previousFilteredFsdOrders), [previousFilteredFsdOrders]);
+    const fsdWeeklyChartData = useMemo(
+      () => getFsdWeeklyTakeRateChartData(filteredFsdOrders),
+      [filteredFsdOrders],
+    );
+    const fsdCoachMoment = useMemo(() => getFsdCoachMoment(filteredFsdOrders), [filteredFsdOrders]);
 
     const calculateDifference = (current: number, previous: number) => {
         return current - previous;
@@ -566,6 +597,17 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
         }
     });
   }, [filteredDriveLogs, coPilotPerformanceSort, advisors]);
+
+  const advisorOrdersData = useMemo(() => {
+    return getAdvisorOrdersChartData(filteredDriveLogs, advisors).sort((a, b) => {
+      switch (advisorOrdersSort) {
+        case 'drives_desc': return b.orders - a.orders;
+        case 'drives_asc': return a.orders - b.orders;
+        case 'name': return a.name.localeCompare(b.name);
+        default: return 0;
+      }
+    });
+  }, [filteredDriveLogs, advisorOrdersSort, advisors]);
 
   const coPilotDurationData = useMemo(() => {
     const data: Record<string, {totalDuration: number, count: number}> = {};
@@ -1118,7 +1160,7 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
       </Card>
 
       {/* Bento Grid Layout - Asymmetric on mobile/tablet for visual interest, standard grid on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-4">
         {/* Total Drives - Hero card on mobile/tablet (full width), standard on desktop */}
         <div className="col-span-2 lg:col-span-1">
             <TrendCard 
@@ -1178,6 +1220,15 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
             isHigherBetter={true}
             icon={<ShoppingBag className="w-4 h-4 text-primary" />}
         />
+
+        <TrendCard 
+            title="FSD Take Rate" 
+            value={fsdTakeRate}
+            unit="%"
+            trend={calculateDifference(fsdTakeRate, previousFsdTakeRate)}
+            isHigherBetter={true}
+            icon={<Sparkles className="w-4 h-4 text-primary" />}
+        />
       </div>
       
         {coPilotOfThePeriod && showCopilotOfMonth && (
@@ -1188,39 +1239,15 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
             />
         )}
 
-        <Card className="border-border/40">
-          <CardHeader>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <ShoppingBag className="w-4 h-4 text-primary" />
-                  Demo-to-sale by advisor &amp; model
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Purchases recorded at check-in, grouped by model and trim (not VIN).
-                  Store rate: {getStorePurchaseConversionRate(filteredDriveLogs).toFixed(1)}%
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {purchaseChartData.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-8 text-center">
-                No purchase conversions in this period. Advisors mark sales at check-in under Sales outcome.
-              </p>
-            ) : (
-              <ChartContainer config={{ purchases: { label: 'Purchases', color: 'hsl(var(--chart-2))' } }} className="h-[320px] w-full">
-                <BarChart accessibilityLayer data={purchaseChartData} layout="vertical" margin={{ left: 8, right: 16 }}>
-                  <CartesianGrid horizontal={false} />
-                  <XAxis type="number" allowDecimals={false} />
-                  <YAxis type="category" dataKey="name" width={140} tickLine={false} axisLine={false} fontSize={11} />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="purchases" fill="var(--color-purchases)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
+        {fsdCoachMoment && (
+          <p className="text-sm text-muted-foreground rounded-xl border border-border/40 bg-muted/20 px-4 py-3 flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-hidden />
+            <span>
+              <span className="font-medium text-foreground">Coach moment: </span>
+              {fsdCoachMoment}
+            </span>
+          </p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
              <Card className="border-border/40">
@@ -1305,6 +1332,85 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
                     </ChartContainer>
                 </CardContent>
             </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="border-border/40">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                FSD Take Rate
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Weekly Full Self-Driving (Supervised) attach rate from orders, follow-ups, and check-in keywords.
+                Period rate: {fsdTakeRate}% ({filteredFsdOrders.length} records)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {fsdWeeklyChartData.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">
+                  No FSD order records in this period. Add them in Management → FSD Orders, or note FSD in check-in feedback.
+                </p>
+              ) : (
+                <ChartContainer
+                  config={{
+                    takeRate: { label: 'Take rate %', color: 'hsl(var(--chart-1))' },
+                    subscribed: { label: 'Subscribed', color: 'hsl(var(--chart-2))' },
+                  }}
+                  className="h-[300px] w-full"
+                >
+                  <BarChart accessibilityLayer data={fsdWeeklyChartData} margin={{ left: -10, right: 10 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
+                    <YAxis unit="%" domain={[0, 100]} />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="takeRate" fill="var(--color-takeRate)" radius={8} name="Take rate %">
+                      <LabelList dataKey="takeRate" position="top" offset={8} className="fill-foreground text-xs" formatter={(v: number) => (v > 0 ? `${v}%` : '')} />
+                    </Bar>
+                  </BarChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/40">
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-primary" />
+                    Orders
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Completed demo drives with a customer purchase, by advisor
+                  </CardDescription>
+                </div>
+                <SortDropdown sortKey={advisorOrdersSort} setSortKey={setAdvisorOrdersSort} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {advisorOrdersData.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-8 text-center">
+                  No orders in this period. Mark purchases at check-in or note FSD subscription in feedback.
+                </p>
+              ) : (
+                <ChartContainer
+                  config={{ orders: { label: 'Orders', color: 'hsl(var(--chart-2))' } }}
+                  className="h-[300px] w-full"
+                >
+                  <BarChart data={advisorOrdersData} layout="vertical" margin={{ left: 20, right: 30, bottom: 20 }} barCategoryGap={15}>
+                    <CartesianGrid horizontal={false} />
+                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 10 }} interval={0} width={100} />
+                    <XAxis type="number" allowDecimals={false} />
+                    <Tooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="orders" fill="var(--color-orders)" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="orders" position="right" offset={8} className="fill-foreground text-xs" formatter={(value: number) => (value > 0 ? value : '')} />
+                    </Bar>
+                  </BarChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
 
@@ -1442,13 +1548,27 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
             issueDetected: log.issueDetected || false,
             feedback: log.feedback || '',
             rating: log.rating || 0,
+
+            // Sales & FSD
+            customerPurchased: log.customerPurchased || false,
+            purchaseModel: log.purchaseModel || '',
+            purchaseTrim: log.purchaseTrim || '',
+            fsdSubscribed: log.fsdSubscribed || false,
             
             // Metadata
             id: log.id,
           };
         })}
         onSave={(config) => {
-          console.log('Chart saved:', config);
+          try {
+            const key = `ddhub-chart-builder:${storeName}`;
+            const existing = JSON.parse(localStorage.getItem(key) || '[]') as unknown[];
+            const next = [...existing, { ...config, savedAt: Date.now() }].slice(-20);
+            localStorage.setItem(key, JSON.stringify(next));
+            toast({ title: 'Chart saved', description: 'Saved to this browser for quick reopen.' });
+          } catch {
+            toast({ title: 'Chart noted', description: 'Could not persist locally; config was still applied.' });
+          }
           setChartBuilderOpen(false);
         }}
       />
@@ -1469,6 +1589,8 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
                   drivesByDayData={drivesByDayData}
                   peakHoursData={peakHoursData}
                   coPilotPerformanceData={coPilotPerformanceData}
+                  purchaseChartData={purchaseChartData}
+                  storePurchaseConversionRate={getStorePurchaseConversionRate(filteredDriveLogs)}
                   drivesByTrimData={drivesByTrimData}
                   coPilotDurationData={coPilotDurationData}
                   batteryLeaderboard={batteryLeaderboard}

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Advisor, Store } from '@/lib/types';
 import { DDHUB_KEYS, getSessionItem, removeSessionItem, setSessionItem } from '@/lib/auth/session-keys';
+import { pickRandomDemoAdvisor } from '@/lib/demo-users';
 
 export function useAdvisorSession({
   currentStore,
@@ -45,7 +46,8 @@ export function useAdvisorSession({
           setAdvisorDialogOpen(true);
         }
       } else if (getSessionItem(DDHUB_KEYS.demoMode) === 'true') {
-        const demoAdvisor = advisors.find((a) => a.name === 'Marco Serrano') ?? advisors[0];
+        const demoAdvisor = pickRandomDemoAdvisor(advisors) ?? advisors[0];
+        if (!demoAdvisor) return;
         setCurrentAdvisor(demoAdvisor);
         setSessionItem(DDHUB_KEYS.advisor, demoAdvisor.id);
       } else {

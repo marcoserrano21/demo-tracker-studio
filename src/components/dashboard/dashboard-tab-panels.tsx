@@ -33,6 +33,7 @@ export function DashboardTabPanels({
   advisors,
   driveLogs,
   driveLogsLoading,
+  fsdOrders = [],
   userRole,
   onVehicleUpdate,
   manualAwards,
@@ -107,6 +108,7 @@ export function DashboardTabPanels({
               advisors={advisors}
               userRole={userRole}
               storeName={store.name}
+              fsdOrders={fsdOrders}
             />
           ) : (
             <TabContentLoader />
@@ -166,6 +168,7 @@ export function DashboardTabPanels({
               manualAwards={manualAwards}
               goals={goals}
               driveLogs={driveLogs}
+              fsdOrders={fsdOrders}
             />
           </Suspense>
         </TabsContent>

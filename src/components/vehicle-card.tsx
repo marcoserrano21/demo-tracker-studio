@@ -6,7 +6,7 @@ import type { Vehicle, Advisor, UserRole, VehicleModel, DriveLog, CardHoverEffec
 import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
-import { Car, Palette, Armchair, ChevronRight, Clock, Ban, Disc, Search, CalendarDays, User, Timer } from 'lucide-react';
+import { Car, Palette, Armchair, ChevronRight, Clock, Ban, Disc, Search, CalendarDays, User, Timer, MapPin } from 'lucide-react';
 import BatteryIndicator from './battery-indicator';
 import StatusBadge from './status-badge';
 import CheckoutSheet from './checkout-sheet';
@@ -205,7 +205,11 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                     <StatusBadge status={getStatus()} />
                 </div>
                 <div className="flex flex-col items-end justify-center gap-2 p-2 min-w-[120px]">
-                    <BatteryIndicator level={vehicle.batteryLevel} />
+                    <BatteryIndicator
+                      level={vehicle.batteryLevel}
+                      source={vehicle.batterySource}
+                      syncedAt={vehicle.telemetrySyncedAt as number | undefined}
+                    />
                     {canCheckin ? (
                         <div className="group checkout-button-pop w-full flex justify-end items-center gap-2 cursor-pointer" onClick={() => setCheckinOpen(true)}>
                             <span className="text-sm font-medium">End Drive</span>
@@ -296,7 +300,25 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                                     VIN ...{vehicle.vin.slice(-6)}
                                 </span>
                             </div>
-                            <BatteryIndicator level={vehicle.batteryLevel} />
+                            <div className="flex flex-col items-end gap-1">
+                              <BatteryIndicator
+                                level={vehicle.batteryLevel}
+                                source={vehicle.batterySource}
+                                syncedAt={vehicle.telemetrySyncedAt as number | undefined}
+                              />
+                              {typeof vehicle.latitude === 'number' && typeof vehicle.longitude === 'number' && (
+                                <a
+                                  href={`https://www.openstreetmap.org/?mlat=${vehicle.latitude}&mlon=${vehicle.longitude}#map=16/${vehicle.latitude}/${vehicle.longitude}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MapPin className="h-3 w-3" aria-hidden />
+                                  Map
+                                </a>
+                              )}
+                            </div>
                         </div>
                          <div className={cn(
                             "grid grid-cols-1 gap-y-2 transition-all duration-500 ease-out origin-top",
