@@ -1,0 +1,436 @@
+/* Global Calendar Styling Overrides - Enhanced Modern Design */
+
+/* Ensure calendar table layout is consistent */
+.rdp-table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+/* Use flexbox for proper alignment with enhanced spacing */
+.rdp-head_row,
+.rdp-row {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+}
+
+/* Force flex layout even in constrained containers like popovers */
+[data-radix-popper-content-wrapper] .rdp-head_row,
+[data-radix-popper-content-wrapper] .rdp-row,
+.rdp-force-flex .rdp-head_row,
+.rdp-force-flex .rdp-row,
+.rdp-force-grid .rdp-head_row,
+.rdp-force-grid .rdp-row,
+.popover .rdp-head_row,
+.popover .rdp-row,
+[role="dialog"] .rdp-head_row,
+[role="dialog"] .rdp-row {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+}
+
+.rdp-head_row {
+  margin-bottom: 1rem !important;
+}
+
+.rdp-head_cell,
+.rdp-cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* Enhanced day button styling with modern interactions */
+.rdp button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Enhanced hover and focus effects */
+.rdp button:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.rdp button:focus {
+  outline: none !important;
+  ring: 2px !important;
+  ring-color: hsl(var(--primary)) !important;
+  ring-opacity: 0.5 !important;
+}
+
+/* Ensure consistent spacing */
+.rdp-month {
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+/* Enhanced visual styling for modern glassmorphism appearance */
+.rdp-day_selected {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.9) 50%, hsl(var(--primary)/0.8) 100%) !important;
+  box-shadow: 
+    0 8px 32px hsl(var(--primary)/0.3),
+    0 4px 16px hsl(var(--primary)/0.2),
+    inset 0 1px 0 hsl(var(--primary-foreground)/0.1) !important;
+  transform: scale(1.1) !important;
+  border-radius: 1rem !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 700 !important;
+  border: 2px solid hsl(var(--primary)/0.4) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: 10 !important;
+}
+
+.rdp-day_selected:hover {
+  transform: scale(1.15) !important;
+  box-shadow: 
+    0 12px 40px hsl(var(--primary)/0.4),
+    0 6px 20px hsl(var(--primary)/0.3),
+    inset 0 1px 0 hsl(var(--primary-foreground)/0.2) !important;
+}
+
+.rdp-day_today {
+  background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--accent)/0.8) 50%, hsl(var(--accent)/0.6) 100%) !important;
+  border: 2px solid hsl(var(--primary)/0.3) !important;
+  border-radius: 1rem !important;
+  box-shadow: 
+    0 4px 16px hsl(var(--primary)/0.2),
+    inset 0 1px 0 hsl(var(--accent-foreground)/0.1) !important;
+  font-weight: 700 !important;
+  transform: scale(1.05) !important;
+  backdrop-filter: blur(4px) !important;
+  position: relative !important;
+}
+
+.rdp-day_today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, hsl(var(--primary)/0.1) 0%, transparent 100%);
+  border-radius: 0.875rem;
+  pointer-events: none;
+}
+
+/* Enhanced range selection styling */
+.rdp-day_range_middle {
+  background: linear-gradient(90deg, hsl(var(--primary)/0.2) 0%, hsl(var(--primary)/0.1) 50%, hsl(var(--primary)/0.2) 100%) !important;
+  color: hsl(var(--foreground)) !important;
+  border-radius: 0.5rem !important;
+}
+
+.rdp-day_range_start,
+.rdp-day_range_end {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.9) 100%) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 4px 16px hsl(var(--primary)/0.3) !important;
+  font-weight: 700 !important;
+}
+
+/* Outside day styling */
+.rdp-day_outside {
+  color: hsl(var(--muted-foreground)/0.3) !important;
+  opacity: 0.3 !important;
+}
+
+.rdp-day_disabled {
+  color: hsl(var(--muted-foreground)/0.2) !important;
+  opacity: 0.2 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Prevent text overflow and ensure proper sizing */
+.rdp button {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+/* Fix calendar container width issues */
+.rdp {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.rdp-month {
+  width: 100% !important;
+  max-width: 380px !important;
+}
+
+/* Navigation button enhancements */
+.rdp-nav_button {
+  backdrop-filter: blur(8px) !important;
+  border: 2px solid hsl(var(--border)/0.3) !important;
+  background: linear-gradient(135deg, hsl(var(--background)/0.8) 0%, hsl(var(--background)/0.6) 100%) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.rdp-nav_button:hover {
+  border-color: hsl(var(--primary)/0.4) !important;
+  background: linear-gradient(135deg, hsl(var(--primary)/0.1) 0%, hsl(var(--primary)/0.05) 100%) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px hsl(var(--primary)/0.2) !important;
+}
+
+/* Popover-specific calendar fixes */
+[data-radix-popper-content-wrapper] .rdp,
+.popover .rdp,
+[role="dialog"] .rdp {
+  width: fit-content !important;
+  max-width: 280px !important;
+}
+
+[data-radix-popper-content-wrapper] .rdp-month,
+.popover .rdp-month,
+[role="dialog"] .rdp-month {
+  width: 100% !important;
+  max-width: 280px !important;
+  margin: 0 !important;
+}
+
+/* Ensure proper spacing in compact variant */
+.rdp-cell:has(.h-8) {
+  min-height: 2rem !important;
+  min-width: 2rem !important;
+}
+
+.rdp-head_cell:has(.w-8) {
+  min-height: 1.5rem !important;
+  min-width: 2rem !important;
+}
+
+/* Ensure days are properly spaced */
+.rdp-head_cell {
+  min-height: 2rem !important;
+  padding: 0.25rem !important;
+}
+
+.rdp-cell {
+  min-height: 2.5rem !important;
+  padding: 0.125rem !important;
+}
+
+/* Large variant specific fixes */
+.rdp-cell:has(.h-14) {
+  min-height: 3.5rem !important;
+  min-width: 3.5rem !important;
+}
+
+.rdp-head_cell:has(.h-10) {
+  min-height: 2.5rem !important;
+  min-width: 3.5rem !important;
+}
+
+/* Scheduled day indicator */
+.rdp-day.rdp-day_has-scheduled {
+  position: relative;
+}
+
+.rdp-day.rdp-day_has-scheduled::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px hsl(var(--background)), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover effects */
+.rdp-day:hover:not(.rdp-day_selected) {
+  background: hsl(var(--accent)/0.6) !important;
+  border-radius: 8px !important;
+  transform: scale(1.02) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .rdp-head_cell,
+  .rdp-cell {
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+  }
+  
+  .rdp-day {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Mobile popover calendar */
+  [data-radix-popper-content-wrapper] .rdp,
+  .popover .rdp,
+  [role="dialog"] .rdp {
+    max-width: 260px !important;
+  }
+  
+  [data-radix-popper-content-wrapper] .rdp-month,
+  .popover .rdp-month,
+  [role="dialog"] .rdp-month {
+    max-width: 260px !important;
+  }
+  
+  /* Compact variant on mobile */
+  .rdp-cell:has(.h-8) {
+    min-height: 1.75rem !important;
+    min-width: 1.75rem !important;
+  }
+  
+  .rdp-head_cell:has(.w-8) {
+    min-height: 1.25rem !important;
+    min-width: 1.75rem !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .rdp-day_selected {
+    border: 3px solid currentColor !important;
+    box-shadow: none !important;
+  }
+  
+  .rdp-day_today {
+    outline: 3px solid currentColor !important;
+    outline-offset: -3px !important;
+  }
+  
+  .rdp-day.rdp-day_has-scheduled::after {
+    border: 2px solid hsl(var(--foreground)) !important;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .rdp-day_outside {
+    opacity: 0.4 !important;
+  }
+  
+  .rdp-day_disabled {
+    opacity: 0.3 !important;
+  }
+  
+  .rdp-day.rdp-day_has-scheduled::after {
+    box-shadow: 0 0 0 1px hsl(var(--background)), 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+}
+
+/* Ensure proper focus states for accessibility */
+.rdp-day:focus-visible {
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+  border-radius: 8px !important;
+  z-index: 10 !important;
+}
+
+/* Fix any potential flexbox wrapping issues */
+.rdp-months {
+  flex-wrap: wrap !important;
+}
+
+/* Navigation button enhancements */
+.rdp-nav_button {
+  background: hsl(var(--muted)/0.5) !important;
+  border: 1px solid hsl(var(--border)/0.3) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.rdp-nav_button:hover {
+  background: hsl(var(--muted)) !important;
+  border-color: hsl(var(--border)) !important;
+  transform: scale(1.05) !important;
+}
+
+/* Caption styling */
+.rdp-caption_label {
+  font-weight: 600 !important;
+  color: hsl(var(--foreground)) !important;
+  letter-spacing: 0.025em !important;
+}
+
+/* ─── Demo Drive Hub — Date Range Picker (scoped) ─────────────────────────── */
+
+.ddh-date-range-picker .ddh-day-picker {
+  max-width: none !important;
+}
+
+.ddh-date-range-picker .ddh-day-picker .rdp-month {
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* Reset global calendar overrides inside the redesigned picker */
+.ddh-date-range-picker .rdp button {
+  transform: none !important;
+  box-shadow: none !important;
+  border-radius: 9999px !important;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.ddh-date-range-picker .rdp button:hover {
+  transform: none !important;
+}
+
+.ddh-date-range-picker .rdp-day_selected,
+.ddh-date-range-picker .rdh-day-picker .rdp-day_selected {
+  transform: none !important;
+  backdrop-filter: none !important;
+  border: none !important;
+}
+
+.ddh-date-range-picker .rdp-day_today::before {
+  display: none !important;
+}
+
+/* Range band on cells */
+.ddh-date-range-picker .ddh-range-middle {
+  background-color: hsl(var(--primary) / 0.14) !important;
+}
+
+.ddh-date-range-picker .ddh-range-start .rdp-day_button,
+.ddh-date-range-picker .ddh-range-end .rdp-day_button,
+.ddh-date-range-picker .day-range-start,
+.ddh-date-range-picker .day-range-end {
+  z-index: 1;
+}
+
+/* Hide scrollbar on preset chips */
+.ddh-date-range-picker .scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.ddh-date-range-picker .scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .ddh-date-range-picker {
+    width: min(calc(100vw - 1rem), 360px) !important;
+  }
+}

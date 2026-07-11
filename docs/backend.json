@@ -1,0 +1,516 @@
+
+{
+  "entities": {
+    "Store": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Store",
+      "type": "object",
+      "description": "Represents a Tesla store location.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the store."
+        },
+        "storeCode": {
+          "type": "string",
+          "description": "The store code (e.g., 'florida-mall')."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the store location."
+        },
+        "password": {
+          "type": "string",
+          "description": "Password required for manager access."
+        }
+      },
+      "required": [
+        "id",
+        "storeCode",
+        "name"
+      ]
+    },
+    "Vehicle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vehicle",
+      "type": "object",
+      "description": "Represents a Tesla vehicle in the demo fleet.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the vehicle."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Reference to the Store where the vehicle is located. (Relationship: Store 1:N Vehicle)"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model of the vehicle (e.g., Model S, Model 3)."
+        },
+        "vin": {
+          "type": "string",
+          "description": "Vehicle Identification Number (last 6 digits)."
+        },
+        "trim": {
+          "type": "string",
+          "description": "Trim level of the vehicle (e.g., Plaid)."
+        },
+        "exteriorColor": {
+          "type": "string",
+          "description": "Exterior color of the vehicle."
+        },
+        "interiorColor": {
+          "type": "string",
+          "description": "Interior color of the vehicle."
+        },
+        "wheelSize": {
+            "type": "string",
+            "description": "The wheel size of the vehicle (e.g. 18\" Photon Wheels)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the vehicle (e.g., Available, On Demo, Charging)."
+        },
+        "batteryLevel": {
+          "type": "number",
+          "description": "Battery level of the vehicle (0-100%)."
+        },
+        "seats": {
+          "type": "string",
+          "description": "Seat configuration (e.g., 5-seater, 7-seater)."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the vehicle's image.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "storeId",
+        "model",
+        "vin",
+        "status",
+        "batteryLevel",
+        "wheelSize"
+      ]
+    },
+    "Advisor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Advisor",
+      "type": "object",
+      "description": "Represents a Tesla advisor at a store location.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the advisor."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Reference to the Store where the advisor is located. (Relationship: Store 1:N Advisor)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the advisor."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the advisor.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "storeId",
+        "name",
+        "email"
+      ]
+    },
+    "DemoDrive": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DemoDrive",
+      "type": "object",
+      "description": "Represents a demo drive event.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the demo drive."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Reference to the Store where the demo drive occurred. (Relationship: Store 1:N DemoDrive)"
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to the Vehicle used for the demo drive. (Relationship: Vehicle 1:N DemoDrive)"
+        },
+        "advisorId": {
+          "type": "string",
+          "description": "Reference to the Advisor who conducted the demo drive. (Relationship: Advisor 1:N DemoDrive)"
+        },
+        "checkoutTime": {
+          "type": "string",
+          "description": "Date and time when the vehicle was checked out for the demo drive.",
+          "format": "date-time"
+        },
+        "expectedDuration": {
+          "type": "number",
+          "description": "Expected duration of the demo drive in minutes."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Purpose of the vehicle use (e.g., Demo, Charging)."
+        },
+        "checkinTime": {
+          "type": "string",
+          "description": "Date and time when the vehicle was checked back in.",
+          "format": "date-time"
+        },
+        "checkinAdvisorId": {
+          "type": "string",
+          "description": "Reference to the Advisor who checked in the vehicle. (Relationship: Advisor 1:N DemoDrive)"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "Feedback provided after the demo drive."
+        },
+        "rating": {
+            "type": "number",
+            "description": "A star rating from 1 to 5 for the demo drive experience."
+        },
+        "batteryLevelOnCheckin": {
+          "type": "number",
+          "description": "Battery level of the vehicle upon check-in."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the demo drive (e.g., scheduled, completed, cancelled)."
+        },
+        "sentimentScore": {
+            "type": "number",
+            "description": "Sentiment score of the feedback, from -1 (negative) to 1 (positive)."
+        },
+        "sentimentLabel": {
+            "type": "string",
+            "description": "Sentiment label of the feedback (e.g., positive, negative, neutral)."
+        },
+        "analyzedAt": {
+            "type": "string",
+            "description": "Date and time when the sentiment analysis was performed.",
+            "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "storeId",
+        "vehicleId",
+        "advisorId",
+        "checkoutTime",
+        "expectedDuration",
+        "purpose"
+      ]
+    },
+    "Goal": {
+        "title": "Goal",
+        "type": "object",
+        "description": "Represents a performance goal for a store or an advisor.",
+        "properties": {
+          "id": { "type": "string" },
+          "storeId": { "type": "string" },
+          "targetType": { "type": "string", "enum": ["store", "advisor"] },
+          "targetId": { "type": "string", "description": "The ID of the store or advisor." },
+          "metric": { "type": "string", "enum": ["drives", "positive_feedback", "charging_sessions"] },
+          "targetValue": { "type": "number" },
+          "timeframe": { "type": "string", "enum": ["daily", "weekly", "monthly"] },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "createdBy": { "type": "string", "description": "The name of the manager who set the goal." },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["storeId", "targetType", "targetId", "metric", "targetValue", "timeframe", "startDate", "endDate"]
+    },
+    "VehicleIssue": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VehicleIssue",
+      "type": "object",
+      "description": "Represents an issue reported for a vehicle.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the vehicle issue."
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to the Vehicle the issue is associated with. (Relationship: Vehicle 1:N VehicleIssue)"
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Reference to the Store where the issue was reported. (Relationship: Store 1:N VehicleIssue)"
+        },
+        "dateReported": {
+          "type": "string",
+          "description": "Date when the issue was reported.",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the issue."
+        },
+        "resolutionStatus": {
+          "type": "string",
+          "description": "Status of the issue resolution (e.g., Open, Resolved)."
+        },
+        "resolutionNotes": {
+          "type": "string",
+          "description": "Notes on the issue resolution."
+        },
+        "resolutionDate": {
+          "type": "string",
+          "description": "Date when the issue was resolved.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "vehicleId",
+        "storeId",
+        "dateReported",
+        "description"
+      ]
+    },
+    "ScheduledDemo": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ScheduledDemo",
+      "type": "object",
+      "description": "Represents a scheduled demo drive event.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the scheduled demo."
+        },
+        "storeId": {
+          "type": "string",
+          "description": "Reference to the Store where the demo is scheduled. (Relationship: Store 1:N ScheduledDemo)"
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to the Vehicle scheduled for the demo. (Relationship: Vehicle 1:N ScheduledDemo)"
+        },
+        "advisorId": {
+          "type": "string",
+          "description": "Reference to the Advisor who is scheduled to conduct the demo. (Relationship: Advisor 1:N ScheduledDemo)"
+        },
+        "startTime": {
+          "type": "string",
+          "description": "Date and time when the demo is scheduled to start.",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the scheduled demo in minutes."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the scheduled demo (e.g., Scheduled, Completed, Cancelled)."
+        }
+      },
+      "required": [
+        "id",
+        "storeId",
+        "vehicleId",
+        "advisorId",
+        "startTime",
+        "duration"
+      ]
+    },
+    "ManualAward": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "ManualAward",
+        "type": "object",
+        "description": "Represents a manually awarded achievement for an advisor.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the manual award." },
+            "storeId": { "type": "string", "description": "Reference to the Store." },
+            "advisorId": { "type": "string", "description": "Reference to the Advisor who received the award." },
+            "advisorName": { "type": "string", "description": "Name of the advisor who received the award." },
+            "achievementId": { "type": "string", "description": "ID of the achievement that was awarded." },
+            "achievementTitle": { "type": "string", "description": "Title of the achievement that was awarded." },
+            "awardedBy": { "type": "string", "description": "Name of the manager who awarded the badge." },
+            "awardedAt": { "type": "string", "description": "Date and time when the badge was awarded.", "format": "date-time" }
+        },
+        "required": ["id", "storeId", "advisorId", "achievementId", "awardedBy", "awardedAt"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "stores/{storeId}",
+        "definition": {
+          "entityName": "Store",
+          "schema": {
+            "$ref": "#/backend/entities/Store"
+          },
+          "description": "Collection of Tesla store locations.  Each document contains store details like name, storeCode and password.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            }
+          ]
+        }
+      },
+      {
+        "path": "stores/{storeId}/vehicles/{vehicleId}",
+        "definition": {
+          "entityName": "Vehicle",
+          "schema": {
+            "$ref": "#/backend/entities/Vehicle"
+          },
+          "description": "Collection of Tesla vehicles associated with a specific store. Includes denormalized 'storeId' for authorization independence.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            },
+            {
+              "name": "vehicleId",
+              "description": "Unique identifier for the vehicle."
+            }
+          ]
+        }
+      },
+      {
+        "path": "stores/{storeId}/advisors/{advisorId}",
+        "definition": {
+          "entityName": "Advisor",
+          "schema": {
+            "$ref": "#/backend/entities/Advisor"
+          },
+          "description": "Collection of Tesla advisors associated with a specific store. Includes denormalized 'storeId' for authorization independence.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            },
+            {
+              "name": "advisorId",
+              "description": "Unique identifier for the advisor."
+            }
+          ]
+        }
+      },
+      {
+        "path": "stores/{storeId}/goals/{goalId}",
+        "definition": {
+          "entityName": "Goal",
+          "schema": {
+            "$ref": "#/backend/entities/Goal"
+          },
+          "description": "Collection of performance goals for a specific store.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            },
+            {
+              "name": "goalId",
+              "description": "Unique identifier for the goal."
+            }
+          ]
+        }
+      },
+      {
+        "path": "stores/{storeId}/demo_drives/{demoDriveId}",
+        "definition": {
+          "entityName": "DemoDrive",
+          "schema": {
+            "$ref": "#/backend/entities/DemoDrive"
+          },
+          "description": "Collection of demo drive records for a specific store. Includes denormalized 'storeId' for authorization independence.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            },
+            {
+              "name": "demoDriveId",
+              "description": "Unique identifier for the demo drive."
+            }
+          ]
+        }
+      },
+      {
+        "path": "stores/{storeId}/vehicles/{vehicleId}/vehicle_issues/{vehicleIssueId}",
+        "definition": {
+          "entityName": "VehicleIssue",
+          "schema": {
+            "$ref": "#/backend/entities/VehicleIssue"
+          },
+          "description": "Collection of vehicle issues reported for a specific vehicle. Includes denormalized 'storeId' for authorization independence.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            },
+            {
+              "name": "vehicleId",
+              "description": "Unique identifier for the vehicle."
+            },
+            {
+              "name": "vehicleIssueId",
+              "description": "Unique identifier for the vehicle issue."
+            }
+          ]
+        }
+      },
+      {
+        "path": "stores/{storeId}/scheduled_demos/{scheduledDemoId}",
+        "definition": {
+          "entityName": "ScheduledDemo",
+          "schema": {
+            "$ref": "#/backend/entities/ScheduledDemo"
+          },
+          "description": "Collection of scheduled demo drives for a specific store. Includes denormalized 'storeId' for authorization independence.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            },
+            {
+              "name": "scheduledDemoId",
+              "description": "Unique identifier for the scheduled demo."
+            }
+          ]
+        }
+      },
+      {
+        "path": "stores/{storeId}/manual_awards/{awardId}",
+        "definition": {
+          "entityName": "ManualAward",
+          "schema": {
+            "$ref": "#/backend/entities/ManualAward"
+          },
+          "description": "Collection of manually awarded achievements for a specific store.",
+          "params": [
+            {
+              "name": "storeId",
+              "description": "Unique identifier for the store."
+            },
+            {
+              "name": "awardId",
+              "description": "Unique identifier for the manual award."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability. It leverages denormalization and structural segregation to optimize security rules and query performance.\\n\\n**Authorization Independence**:  The structure avoids hierarchical authorization dependencies by denormalizing authorization context.  For example, access to `demo_drives` and `scheduled_demos` requires knowledge of the `storeId`. This value is included in each `demo_drive` document, removing the need for security rules to `get()` the parent store document to validate the store.  Similarly, ownership of nested data like `vehicle_issues` under a vehicle is simplified by including `storeId` on each `vehicle_issue` document.  This redundancy enables atomic operations and simplifies security rule debugging.\\n\\n**QAPs (Rules are not Filters)**: The structure ensures secure `list` operations by segregating data based on access requirements. Access to vehicles and advisors is limited to the store level, facilitating efficient queries within a store context. Moreover, membership data is stored within each document, allowing for secure listing based on membership criteria without the need to filter on the client side.\\n\\nThe core principle guiding the design is to optimize for secure and efficient data access, leveraging Firestore's capabilities while adhering to best practices for security and scalability."
+  }
+}
