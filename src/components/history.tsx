@@ -301,6 +301,7 @@ export default function History({ driveLogs: initialDriveLogs, userRole, storeCo
                 vehicles={vehicles}
                 onUpdateLog={onUpdateLog}
                 isCompact={shouldUseCompactView}
+                editorName={currentAdvisor.name}
             />
         </div>
     );

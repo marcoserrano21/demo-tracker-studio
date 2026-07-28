@@ -38,6 +38,9 @@ import { buildLeaderboardMetrics, compareLeaderboardEntries, withDenseRanks } fr
 import { getAdvisorConversionRate } from '@/lib/purchase-analytics';
 import { useXPSystem } from '@/hooks/use-xp-system';
 import { LevelUpModal } from './xp-toast';
+import { EndOfShiftRecap } from './end-of-shift-recap';
+import { StreakIndicator } from './streak-indicator';
+import { calculateHabitStreak } from '@/lib/habit-streak';
 
 
 interface MyHubProps {
@@ -242,16 +245,8 @@ export default function MyHub({ advisor, driveLogs, vehicles, advisors, storeCod
       count > max.count ? { date, count } : max
     , { date: '', count: 0 });
 
-    // Current streak
-    const sortedDates = Array.from(new Set(completedDrives.map(log => format(getDriveDate(log), 'yyyy-MM-dd')))).sort();
-    let currentStreak = 0;
-    let today = format(new Date(), 'yyyy-MM-dd');
-    let checkDate = new Date();
-    
-    while (sortedDates.includes(format(checkDate, 'yyyy-MM-dd'))) {
-      currentStreak++;
-      checkDate = subDays(checkDate, 1);
-    }
+    // Habit streak: on-time Finish + FSD-sub attach
+    const habitStreak = calculateHabitStreak(driveLogs, advisor.name);
 
     // Best rating
     const bestRating = completedDrives.reduce((max, log) => 
@@ -271,11 +266,13 @@ export default function MyHub({ advisor, driveLogs, vehicles, advisors, storeCod
       longestDrive,
       shortestDrive,
       mostDrivesDay,
-      currentStreak,
+      currentStreak: habitStreak.current,
+      longestStreak: habitStreak.longest,
+      todayHabitCompleted: habitStreak.todayCompleted,
       bestRating,
       mostPopularModel
     };
-  }, [completedDrives]);
+  }, [completedDrives, driveLogs, advisor.name]);
 
   const unlockedAchievements = useMemo(() => {
     const getUnlockDate = (ach: Achievement): Date | null => {
@@ -604,6 +601,9 @@ export default function MyHub({ advisor, driveLogs, vehicles, advisors, storeCod
             showDetails={true}
           />
         </div>
+
+        <EndOfShiftRecap advisor={advisor} driveLogs={driveLogs} vehicles={vehicles} />
+        <StreakIndicator driveLogs={driveLogs} advisorName={advisor.name} />
         
         {/* Key Metrics Grid - Best Rating & Schedule */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-6">
@@ -745,6 +745,26 @@ export default function MyHub({ advisor, driveLogs, vehicles, advisors, storeCod
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Leaderboard</p>
                   </div>
                 </div>
+
+                {/* Habit streak (on-time + FSD-sub) */}
+                {personalBests.currentStreak > 0 && (
+                  <div className="group relative overflow-hidden">
+                    <div className="relative p-2 sm:p-3 bg-gradient-to-br from-orange-500/8 via-red-400/4 to-transparent rounded-lg sm:rounded-xl border border-orange-500/20 transition-all duration-300 hover:border-orange-500/40 hover:shadow-lg hover:shadow-orange-500/10">
+                      <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                          <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-500" />
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg sm:text-xl font-bold">{personalBests.currentStreak}</div>
+                          <div className="text-[10px] sm:text-xs font-medium text-muted-foreground">Habit Streak</div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                        On-time + FSD-sub · best {personalBests.longestStreak}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Longest Drive */}
                 {personalBests.longestDrive.duration > 0 && (

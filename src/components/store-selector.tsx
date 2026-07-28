@@ -13,7 +13,7 @@ import { Input } from './ui/input';
 import { verifyStoreAccess, tryDemoStoreAccess } from '@/app/auth/actions';
 import { invokeServerAction } from '@/lib/server-action-client';
 import { DDHUB_KEYS, setSessionItem, removeSessionItem } from '@/lib/auth/session-keys';
-import { HubLogo } from './hub-logo';
+import { HubLogo, PRODUCT_SUBTITLE } from './hub-logo';
 import { Loader2, Sparkles, ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -80,7 +80,7 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
       const result = await invokeServerAction(tryDemoStoreAccess);
       if (result.success && result.storeCode) {
         setSessionItem(DDHUB_KEYS.demoMode, 'true');
-        toast({ title: 'Demo ready', description: 'Opening the sample fleet — tap Checkout on any available vehicle.' });
+        toast({ title: 'Demo ready', description: 'Pick an advisor, then land on Floor Mode — tap Start on any available vehicle.' });
         onStoreSelect(result.storeCode, { demo: true });
       } else {
         toast({
@@ -103,12 +103,15 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8">
       <div className="mb-8 flex flex-col items-center text-center">
-        <HubLogo expanded className="mb-4" />
+        <HubLogo expanded showSubtitle className="mb-4" />
         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
           Demo Drive Hub
         </h1>
-        <p className="mt-4 max-w-md text-lg text-muted-foreground">
-          Built for advisors on the sales floor — check out a demo in seconds, not minutes.
+        <p className="mt-2 text-base font-medium text-primary sm:text-lg">
+          {PRODUCT_SUBTITLE}
+        </p>
+        <p className="mt-3 max-w-md text-muted-foreground">
+          Find a car. Start the demo. Finish with FSD logged — in seconds, not minutes.
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
           Portfolio project by Marco Serrano · OEM-neutral demo fleet

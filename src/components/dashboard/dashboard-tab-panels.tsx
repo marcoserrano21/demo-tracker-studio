@@ -5,8 +5,10 @@ import { TabsContent } from '@/components/ui/tabs';
 import type { DriveLog, Goal, ManualAward, VehicleIssue } from '@/lib/types';
 import { stores as allStores } from '@/lib/data';
 import VehicleGrid from '@/components/vehicle-grid';
+import FloorMode from '@/components/floor-mode';
 import { TabContentLoader } from '@/components/dashboard/tab-content-loader';
 import { TAB_PANEL_CLASS, type DashboardLayoutProps } from '@/components/dashboard/dashboard-shell-types';
+import { isElevatedUserRole } from '@/lib/demo-users';
 
 const History = lazy(() => import('@/components/history'));
 const AnalyticsDashboard = lazy(() => import('@/components/analytics-dashboard'));
@@ -24,6 +26,7 @@ type TabPanelsProps = DashboardLayoutProps & {
   vehicleIssues: VehicleIssue[];
   onLogUpdate: (log: DriveLog, affectedVehicleId?: string) => void;
   isMobile?: boolean;
+  onNavigateTab?: (tab: string) => void;
 };
 
 export function DashboardTabPanels({
@@ -44,6 +47,7 @@ export function DashboardTabPanels({
   onAdvisorsUpdate,
   onVehiclesUpdate,
   isMobile = false,
+  onNavigateTab,
 }: TabPanelsProps) {
   const logsReady = !driveLogsLoading;
 
@@ -67,7 +71,36 @@ export function DashboardTabPanels({
       </TabsContent>
 
       <TabsContent className={TAB_PANEL_CLASS} value="fleet">
-        <VehicleGrid
+        {isMobile ? (
+          <FloorMode
+            vehicles={vehicles}
+            advisors={advisors}
+            currentAdvisor={advisor}
+            storeCode={store.code}
+            userRole={userRole}
+            driveLogs={driveLogs}
+            onVehicleUpdate={onVehicleUpdate}
+            onNavigateTab={onNavigateTab}
+          />
+        ) : (
+          <VehicleGrid
+            vehicles={vehicles}
+            advisors={advisors}
+            currentAdvisor={advisor}
+            storeCode={store.code}
+            userRole={userRole}
+            driveLogs={driveLogs}
+            onVehicleUpdate={onVehicleUpdate}
+            storeName={store.name}
+            advisorName={advisor.name.split(' ')[0]}
+            isMobile={isMobile}
+            onNavigateTab={onNavigateTab}
+          />
+        )}
+      </TabsContent>
+
+      <TabsContent className={TAB_PANEL_CLASS} value="finish">
+        <FloorMode
           vehicles={vehicles}
           advisors={advisors}
           currentAdvisor={advisor}
@@ -75,9 +108,8 @@ export function DashboardTabPanels({
           userRole={userRole}
           driveLogs={driveLogs}
           onVehicleUpdate={onVehicleUpdate}
-          storeName={store.name}
-          advisorName={advisor.name.split(' ')[0]}
-          isMobile={isMobile}
+          finishOnly
+          onNavigateTab={onNavigateTab}
         />
       </TabsContent>
 
@@ -108,7 +140,10 @@ export function DashboardTabPanels({
               advisors={advisors}
               userRole={userRole}
               storeName={store.name}
+              storeCode={store.code}
+              vehicles={vehicles}
               fsdOrders={fsdOrders}
+              onNavigateTab={onNavigateTab}
             />
           ) : (
             <TabContentLoader />
@@ -149,11 +184,11 @@ export function DashboardTabPanels({
 
       <TabsContent className={TAB_PANEL_CLASS} value="settings">
         <Suspense fallback={<TabContentLoader />}>
-          <SettingsPage advisor={advisor} storeCode={store.code} advisors={advisors} />
+          <SettingsPage advisor={advisor} storeCode={store.code} advisors={advisors} userRole={userRole} />
         </Suspense>
       </TabsContent>
 
-      {userRole === 'manager' && (
+      {isElevatedUserRole(userRole) && (
         <TabsContent className={TAB_PANEL_CLASS} value="management">
           <Suspense fallback={<TabContentLoader />}>
             <ManagementTabs

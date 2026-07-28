@@ -1,8 +1,8 @@
 {
   "name": "Demo Drive Hub",
   "short_name": "DD Hub",
-  "description": "Manage EV demo vehicles and drives with real-time scheduling, analytics, and fleet management",
-  "start_url": "/",
+  "description": "Showroom demo fleet OS — find, start, and finish demos with live availability and FSD logging",
+  "start_url": "/?tab=fleet",
   "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
@@ -15,24 +15,24 @@
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "shortcuts": [
     {
-      "name": "Schedule Drive",
-      "short_name": "Schedule",
-      "description": "Schedule a new demo drive",
-      "url": "/?tab=schedule",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Fleet",
-      "short_name": "Fleet",
-      "description": "View vehicle fleet",
+      "name": "Find (Floor Mode)",
+      "short_name": "Find",
+      "description": "Open Floor Mode availability",
       "url": "/?tab=fleet",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Analytics",
-      "short_name": "Analytics",
-      "description": "View performance analytics",
-      "url": "/?tab=analytics",
+      "name": "Start",
+      "short_name": "Start",
+      "description": "Schedule or start a demo",
+      "url": "/?tab=schedule",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Finish",
+      "short_name": "Finish",
+      "description": "End active demos and log FSD",
+      "url": "/?tab=finish",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {

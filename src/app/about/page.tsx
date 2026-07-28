@@ -16,7 +16,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import Link from 'next/link';
-import { HubLogo } from '@/components/hub-logo';
+import { HubLogo, PRODUCT_SUBTITLE } from '@/components/hub-logo';
 
 const NOTION_CASE_STUDY_URL =
   'https://app.notion.com/p/The-Demo-Drive-Hub-28dc2787689780abbd0dda2d88ff91c4?source=copy_link';
@@ -27,12 +27,22 @@ const METRICS = [
   { label: 'Advisors onboarded', value: '12 in 2 weeks' },
   { label: 'Double bookings', value: '0 after launch' },
   { label: 'Issues flagged early', value: '8 via keywords' },
+  { label: 'Avg demo duration', value: '57 min vs 30 assumed' },
+];
+
+const BEFORE_AFTER = [
+  { before: 'Whiteboard tracking', after: 'Real-time dashboard' },
+  { before: '5+ min per demo log', after: 'Under 30 seconds' },
+  { before: 'Group chat photos', after: 'Structured check-in/out' },
+  { before: 'Frequent double-bookings', after: 'Zero after launch' },
+  { before: 'No analytics', after: 'Conversion + FSD + charts' },
+  { before: 'Lost data', after: 'Searchable history + CSV' },
 ];
 
 const ROLES = [
   {
     title: 'UI/UX Design',
-    body: 'Mobile-first flows for a loud, fast sales floor. One primary action per screen, preset battery inputs, high-contrast themes for weird floor lighting. I overanalyzed the check-in flow until it felt obvious. Took a few wrong versions to get there.',
+    body: 'Mobile-first Floor Mode for a loud, fast sales floor. Find → Start → Finish, one primary action per vehicle state, mandatory FSD check-in KPIs. I overanalyzed the check-in flow until it felt obvious. Took a few wrong versions to get there.',
   },
   {
     title: 'Product & Engineering',
@@ -56,9 +66,10 @@ export default function AboutPage() {
         </Button>
 
         <div className="mb-10 flex flex-col items-center text-center">
-          <HubLogo expanded className="mb-4" />
+          <HubLogo expanded showSubtitle className="mb-4" />
           <p className="text-sm font-medium text-primary">Portfolio case study</p>
           <h1 className="mt-2 text-4xl font-bold tracking-tight">Demo Drive Hub</h1>
+          <p className="mt-1 text-base font-medium text-primary">{PRODUCT_SUBTITLE}</p>
           <p className="mt-3 max-w-xl text-lg text-muted-foreground">
             I build where data, design, and product overlap. This app is the receipt from the showroom floor.
           </p>
@@ -96,6 +107,27 @@ export default function AboutPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
+              Origin story
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-muted-foreground">
+            <p>
+              This started on an EV retail sales floor. Demo drives were the peak customer moment — and behind the
+              scenes they ran on whiteboards, group chats, and memory. One availability check took 25 minutes while a
+              guest waited. Pilot data later showed demos averaged 57 minutes vs the 30 everyone assumed.
+            </p>
+            <p>
+              Demo Drive Hub is the system that grew out of that chaos. The product stays OEM-neutral — a showroom
+              demo fleet OS for any brand. Manufacturer names appear only as origin story and case-study context, not
+              as the product brand.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
               The problem
             </CardTitle>
           </CardHeader>
@@ -106,9 +138,9 @@ export default function AboutPage() {
               UX problem. That is a trust problem.
             </p>
             <p>
-              Demo Drive Hub replaces that friction with live fleet status, ~30-second check-in/out, advisor
-              gamification, demo-to-sale analytics by model and trim, and manager dashboards. All on a phone. Still
-              not perfect, but the before/after is hard to argue with.
+              Demo Drive Hub replaces that friction with Floor Mode, Find → Start → Finish, ~30-second check-in with
+              mandatory FSD KPIs, advisor gamification, and manager dashboards. All on a phone. Still not perfect, but
+              the before/after is hard to argue with.
             </p>
           </CardContent>
         </Card>
@@ -175,6 +207,27 @@ export default function AboutPage() {
 
         <Card className="mb-6">
           <CardHeader>
+            <CardTitle>Before → After</CardTitle>
+            <CardDescription>Pilot floor ops, before the hub vs after.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {BEFORE_AFTER.map((row) => (
+                <li
+                  key={row.before}
+                  className="grid grid-cols-1 gap-1 rounded-lg border border-border/50 px-3 py-2.5 text-sm sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-3"
+                >
+                  <span className="text-muted-foreground">{row.before}</span>
+                  <span className="hidden text-xs font-medium uppercase tracking-wide text-primary sm:inline">→</span>
+                  <span className="font-medium text-foreground">{row.after}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
             <CardTitle>Stack and craft</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-muted-foreground">
@@ -219,7 +272,7 @@ export default function AboutPage() {
           <Button asChild size="lg" className="rounded-xl">
             <Link href="/">
               <Sparkles className="mr-2 h-4 w-4" />
-              Try live demo
+              Try Demo Store · Floor Mode
             </Link>
           </Button>
           <Button asChild variant="outline" className="rounded-xl">
@@ -255,6 +308,9 @@ export default function AboutPage() {
             </a>
           </Button>
         </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          Demo Store opens on Floor Mode: Find an available car → Start a demo → Finish when they return.
+        </p>
       </div>
     </div>
   );

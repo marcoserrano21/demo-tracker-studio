@@ -274,19 +274,21 @@ export function FsdOrdersTab({
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit FSD order' : 'Add FSD order'}</DialogTitle>
             <DialogDescription>
-              Record whether the customer checked Monthly Subscription ($99/mo) or converted on a
-              follow-up call.
+              Soft ops labels only — no real customer names, emails, or phones (keeps this PII-free).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="fsd-label">Customer label / order ref</Label>
+              <Label htmlFor="fsd-label">Ops label / order ref (no PII)</Label>
               <Input
                 id="fsd-label"
                 value={customerLabel}
                 onChange={(e) => setCustomerLabel(e.target.value)}
-                placeholder="e.g. J.S. · ORD-4821"
+                placeholder="e.g. ORD-4821 · Model Y"
               />
+              <p className="text-xs text-muted-foreground">
+                Use an order ref or initials — never full name, email, or phone.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="fsd-date">Order date</Label>

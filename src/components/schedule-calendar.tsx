@@ -16,6 +16,12 @@ import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } fro
 import { doc, collection, query, where, getDocs, writeBatch, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import CheckoutSheet from './checkout-sheet';
 import {
+  canStartScheduledDrive,
+  isScheduledDrivePastDue,
+  isScheduledDriveTooEarly,
+  SCHEDULE_EARLY_START_MINUTES,
+} from '@/lib/drive-log-utils';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -470,16 +476,15 @@ export default function ScheduleCalendar({ driveLogs, storeCode, vehicles, advis
                 
                 const scheduledTime = getScheduledTime();
                 const logDate = new Date(scheduledTime);
-                const now = Date.now();
-                const timeUntilStart = scheduledTime - now;
-                const timeAfterStart = now - scheduledTime;
-                const isManager = userRole === 'manager';
-
-                // Disable start button 15 minutes BEFORE scheduled time (unless manager)
-                // Allow starting 15 minutes early to 15 minutes after (or anytime for managers)
-                const canStart = isManager || (timeUntilStart <= 15 * 60 * 1000 && timeAfterStart <= 15 * 60 * 1000);
+                const isPastDue = isScheduledDrivePastDue(log.startTime);
+                const tooEarly = isScheduledDriveTooEarly(log.startTime);
+                const canStart = canStartScheduledDrive(log.startTime);
                 const isStartable = canStart && !isPending;
-                const isPastDue = timeAfterStart > 15 * 60 * 1000 && !isManager;
+                const startBlockedTitle = tooEarly
+                  ? `Can only start ${SCHEDULE_EARLY_START_MINUTES} minutes before scheduled time`
+                  : isPastDue
+                    ? 'Start window has closed'
+                    : '';
 
                 return (
                   <div key={log.id} className={cn(
@@ -609,7 +614,7 @@ export default function ScheduleCalendar({ driveLogs, storeCode, vehicles, advis
                                   ? "border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 hover:border-primary/40 hover:shadow-primary/20 hover:scale-[1.02]"
                                   : "border-border/30 bg-muted/20 text-muted-foreground cursor-not-allowed opacity-60"
                               )}
-                              title={!isStartable && !isManager ? "Can only start 15 minutes before scheduled time" : ""}
+                              title={!isStartable ? startBlockedTitle : ""}
                             >
                               {isPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

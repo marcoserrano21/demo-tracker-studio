@@ -8,10 +8,14 @@ import BatteryIndicator from './battery-indicator';
 import StatusBadge from './status-badge';
 import CheckoutSheet from './checkout-sheet';
 import CheckinSheet from './checkin-sheet';
-import type { Timestamp } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { Badge } from './ui/badge';
-import { findActiveDriveLog } from '@/lib/drive-log-utils';
+import {
+  findActiveDriveLog,
+  findUpcomingSchedule,
+  findVehicleSchedule,
+  isWithinScheduleReserveWindow,
+} from '@/lib/drive-log-utils';
+import { isBatteryBlocked } from '@/lib/battery-thresholds';
 
 interface VehicleListItemProps extends React.HTMLAttributes<HTMLDivElement> {
     vehicle: Vehicle;
@@ -28,7 +32,7 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
     const [isCheckoutOpen, setCheckoutOpen] = useState(false);
     const [isCheckinOpen, setCheckinOpen] = useState(false);
 
-    const isDemoDisabled = vehicle.batteryLevel < 15;
+    const isDemoDisabled = isBatteryBlocked(vehicle.batteryLevel);
     const needsAttention = vehicle.status === 'Needs Attention';
 
     const currentDriveLog = useMemo(
@@ -36,40 +40,39 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
         [driveLogs, vehicle],
     );
 
-    const upcomingSchedule = useMemo(() => {
-        const now = Date.now();
-        const futureDrives = (scheduledDrives || [])
-            .filter(drive => {
-                const startTime = (drive.startTime as Timestamp)?.toDate ? (drive.startTime as Timestamp).toDate().getTime() : new Date(drive.startTime as number | Date).getTime();
-                return drive.vehicleId === vehicle.id && startTime > now;
-            })
-            .sort((a, b) => {
-                const timeA = (a.startTime as Timestamp)?.toDate ? (a.startTime as Timestamp).toDate().getTime() : new Date(a.startTime as number | Date).getTime();
-                const timeB = (b.startTime as Timestamp)?.toDate ? (b.startTime as Timestamp).toDate().getTime() : new Date(b.startTime as number | Date).getTime();
-                return timeA - timeB;
-            });
-        
-        return futureDrives[0];
-    }, [scheduledDrives, vehicle.id]);
-      
-    const isScheduledForSoon = useMemo(() => {
-        if (!upcomingSchedule) return false;
-        const now = Date.now();
-        const startTime = (upcomingSchedule.startTime as Timestamp)?.toDate ? (upcomingSchedule.startTime as Timestamp).toDate().getTime() : new Date(upcomingSchedule.startTime as number | Date).getTime();
-        return startTime - now < 15 * 60 * 1000 && startTime > now;
-    }, [upcomingSchedule]);
+    const upcomingSchedule = useMemo(
+        () => findUpcomingSchedule(vehicle.id, scheduledDrives),
+        [scheduledDrives, vehicle.id],
+    );
 
-    const canCheckout = (vehicle.status === 'Available' || (vehicle.status === 'Scheduled' && !isScheduledForSoon));
+    const openSchedule = useMemo(
+        () => findVehicleSchedule(vehicle.id, scheduledDrives),
+        [scheduledDrives, vehicle.id],
+    );
+
+    /** Block walk-in Start only in the 15 min before the booking. */
+    const isReservedSoon = useMemo(() => {
+        const booking = upcomingSchedule ?? openSchedule;
+        if (!booking) return false;
+        return isWithinScheduleReserveWindow(booking.startTime);
+    }, [upcomingSchedule, openSchedule]);
+
+    const canCheckout =
+        vehicle.status === 'On Demo' ||
+        ((vehicle.status === 'Available' || vehicle.status === 'Scheduled') && !isReservedSoon);
     const canSchedule = vehicle.status === 'On Demo';
     const canCheckin = vehicle.status === 'On Demo' || vehicle.status === 'Charging';
 
     const getStatus = (): "Not Available" | Vehicle['status'] => {
         if (needsAttention) return 'Needs Attention';
-        if (vehicle.status === 'Available' && isDemoDisabled && userRole === 'advisor') return 'Not Available';
+        if (vehicle.status === 'Available' && isDemoDisabled) return 'Not Available';
         return vehicle.status;
     }
 
-    const isButtonDisabled = (userRole === 'advisor' && vehicle.status === 'Available' && isDemoDisabled) || isScheduledForSoon || needsAttention;
+    const isButtonDisabled =
+        needsAttention ||
+        isDemoDisabled ||
+        isReservedSoon;
 
     return (
         <>
@@ -86,7 +89,7 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                     <div className="flex flex-col items-start gap-1 min-w-[120px]">
                         <StatusBadge status={getStatus()} />
                         {vehicle.status === 'Available' && upcomingSchedule && !isDemoDisabled && (
-                            <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/30">Scheduled</Badge>
+                            <StatusBadge status="Scheduled" />
                         )}
                     </div>
                     
@@ -102,11 +105,11 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                         <div className="w-[120px] flex justify-end">
                             {canCheckin ? (
                                 <Button variant="secondary" size="sm" onClick={() => setCheckinOpen(true)} className="w-full">
-                                    End Drive
+                                    {vehicle.status === 'Charging' ? 'Complete' : 'Finish'}
                                 </Button>
                             ) : canCheckout ? (
                                 <Button size="sm" onClick={() => setCheckoutOpen(true)} disabled={isButtonDisabled} className="w-full">
-                                    Checkout
+                                    {isDemoDisabled ? 'Low battery' : isReservedSoon ? 'Scheduled' : 'Start'}
                                 </Button>
                             ) : canSchedule ? (
                                 <Button size="sm" onClick={() => setCheckoutOpen(true)} className="w-full">
@@ -114,7 +117,7 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                                 </Button>
                             ) : (
                                 <Button size="sm" disabled variant="destructive" className="w-full">
-                                    {vehicle.status}
+                                    {isReservedSoon ? 'Scheduled' : vehicle.status}
                                 </Button>
                             )}
                         </div>

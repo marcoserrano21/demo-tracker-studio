@@ -24,6 +24,7 @@ type SyncResponse = {
     batteryLevel?: number;
     latitude?: number;
     longitude?: number;
+    fsdActive?: boolean;
     fetchedAt: number;
   }>;
 };
@@ -86,6 +87,7 @@ export function TelemetrySyncButton({
         if (typeof match.batteryLevel === 'number') patch.batteryLevel = match.batteryLevel;
         if (typeof match.latitude === 'number') patch.latitude = match.latitude;
         if (typeof match.longitude === 'number') patch.longitude = match.longitude;
+        if (typeof match.fsdActive === 'boolean') patch.fsdActiveTelemetry = match.fsdActive;
         if (typeof match.latitude === 'number' || typeof match.longitude === 'number') {
           patch.locationUpdatedAt = match.fetchedAt;
         }

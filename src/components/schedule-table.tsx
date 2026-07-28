@@ -25,6 +25,12 @@ import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } fro
 import { doc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import {
+  canStartScheduledDrive,
+  isScheduledDrivePastDue,
+  isScheduledDriveTooEarly,
+  SCHEDULE_EARLY_START_MINUTES,
+} from '@/lib/drive-log-utils';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -278,16 +284,15 @@ export default function ScheduleTable({ driveLogs, storeCode, vehicles, advisors
     };
     
     const scheduledTime = getScheduledTime();
-    const now = Date.now();
-    const timeUntilStart = scheduledTime - now;
-    const timeAfterStart = now - scheduledTime;
-    const isManager = userRole === 'manager';
-
-    // Disable start button 15 minutes BEFORE scheduled time (unless manager)
-    // Allow starting 15 minutes early to 15 minutes after (or anytime for managers)
-    const canStart = isManager || (timeUntilStart <= 15 * 60 * 1000 && timeAfterStart <= 15 * 60 * 1000);
+    const isPastDue = isScheduledDrivePastDue(log.startTime);
+    const tooEarly = isScheduledDriveTooEarly(log.startTime);
+    const canStart = canStartScheduledDrive(log.startTime);
     const isStartable = canStart && !isPending;
-    const isPastDue = timeAfterStart > 15 * 60 * 1000 && !isManager;
+    const startBlockedTitle = tooEarly
+      ? `Can only start ${SCHEDULE_EARLY_START_MINUTES} minutes before scheduled time`
+      : isPastDue
+        ? 'Start window has closed'
+        : '';
 
     if (isMobile) {
       return (
@@ -362,7 +367,7 @@ export default function ScheduleTable({ driveLogs, storeCode, vehicles, advisors
                 onClick={() => handleStartDriveClick(log)}
                 disabled={!isStartable}
                 className="border-primary/30 text-primary hover:bg-primary/10 rounded-xl px-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={!isStartable && !isManager ? "Can only start 15 minutes before scheduled time" : ""}
+                title={!isStartable ? startBlockedTitle : ""}
               >
                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlayCircle className="h-4 w-4 mr-2" />}
                 Start
@@ -453,7 +458,7 @@ export default function ScheduleTable({ driveLogs, storeCode, vehicles, advisors
                 onClick={() => handleStartDriveClick(log)}
                 disabled={!isStartable}
                 className="border-primary/30 text-primary hover:bg-primary/10 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed h-8 px-2 lg:px-3"
-                title={!isStartable && !isManager ? "Can only start 15 minutes before scheduled time" : ""}
+                title={!isStartable ? startBlockedTitle : ""}
               >
                 {isPending ? <Loader2 className="h-3.5 w-3.5 lg:h-4 lg:w-4 animate-spin" /> : <PlayCircle className="h-3.5 w-3.5 lg:h-4 lg:w-4 lg:mr-1.5" />}
                 <span className="hidden lg:inline text-sm">Start</span>

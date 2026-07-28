@@ -24,13 +24,20 @@ interface HeaderProps {
   storeCode: string;
   children: React.ReactNode;
   currentAdvisor: Advisor;
+  /** Optional override when elevating (e.g. land on Morning Brief). */
+  onManagerLoginSuccess?: () => void;
 }
 
-export default function Header({ storeName, userRole, setUserRole, onStoreChange, storeCode, children, currentAdvisor }: HeaderProps) {
+export default function Header({ storeName, userRole, setUserRole, onStoreChange, storeCode, children, currentAdvisor, onManagerLoginSuccess }: HeaderProps) {
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false);
   const allowManagerAccess = canRequestManagerAccess(currentAdvisor);
 
   const handleManagerLoginSuccess = () => {
+    if (onManagerLoginSuccess) {
+      onManagerLoginSuccess();
+      setAuthDialogOpen(false);
+      return;
+    }
     setUserRole('manager');
     setAuthDialogOpen(false);
   };

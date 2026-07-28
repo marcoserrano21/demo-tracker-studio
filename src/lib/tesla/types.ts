@@ -4,6 +4,8 @@ export interface VehicleTelemetry {
   latitude?: number;
   longitude?: number;
   chargingState?: string;
+  /** Best-effort: autopilot/FSD engaged signal from vehicle_data when present. */
+  fsdActive?: boolean;
   fetchedAt: number;
 }
 

@@ -163,7 +163,7 @@ function getDemoAdvisors(storeCode: string): Array<Advisor> {
       name,
       email: getDemoAdvisorEmail(name),
       role: isManagerDemo ? 'moderator' : 'advisor',
-      defaultTab: isManagerDemo || isRandomGuest ? 'fleet' : 'my-hub',
+      defaultTab: 'fleet',
       themePreference: 'dark',
       fontSize: 'base',
       fleetView: 'grid',

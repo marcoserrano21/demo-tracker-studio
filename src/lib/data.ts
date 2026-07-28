@@ -305,6 +305,26 @@ export const stores: (StoreInfo & { region: string })[] = Object.values(STORE_CO
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
+/** Same-region peers for Regional lite (excludes current store). */
+export function getRegionalPeerStores(
+  storeCode: string,
+  limit = 2,
+): Array<StoreInfo & { region: string }> {
+  const current = stores.find((s) => s.code === storeCode);
+  if (!current) {
+    return stores.filter((s) => s.code !== storeCode).slice(0, limit);
+  }
+  return stores
+    .filter((s) => s.region === current.region && s.code !== storeCode)
+    .slice(0, limit);
+}
+
+export function getRegionLabel(storeCode: string): string {
+  const current = stores.find((s) => s.code === storeCode);
+  if (!current) return 'Region';
+  return regions[current.region] ?? current.region;
+}
+
 export const getStoreData = (storeCode: string): Omit<Store, 'id'> | null => {
   if (!STORE_CONFIG[storeCode]) return null;
 

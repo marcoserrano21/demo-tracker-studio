@@ -49,6 +49,12 @@ import {
   getFsdCoachMoment,
 } from '@/lib/fsd-analytics';
 import { ShoppingBag } from 'lucide-react';
+import MorningBrief from './morning-brief';
+import WeeklyStoreReport from './weekly-store-report';
+import RegionalLite from './regional-lite';
+import { CoachingQueue } from './coaching-queue';
+import type { Vehicle } from '@/lib/types';
+import { isElevatedUserRole } from '@/lib/demo-users';
 
 
 interface AnalyticsDashboardProps {
@@ -56,7 +62,10 @@ interface AnalyticsDashboardProps {
   advisors: Advisor[];
   userRole: UserRole;
   storeName: string;
+  storeCode?: string;
+  vehicles?: Vehicle[];
   fsdOrders?: FsdOrderRecord[];
+  onNavigateTab?: (tab: string) => void;
 }
 
 type SortKey = 'name' | 'drives_desc' | 'drives_asc' | 'duration_desc' | 'duration_asc';
@@ -89,8 +98,18 @@ const QUICK_ANALYTICS_PRESETS = [
 ] as const;
 
 
-export default function AnalyticsDashboard({ driveLogs, advisors, userRole, storeName, fsdOrders = [] }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard({
+  driveLogs,
+  advisors,
+  userRole,
+  storeName,
+  storeCode = 'store',
+  vehicles = [],
+  fsdOrders = [],
+  onNavigateTab,
+}: AnalyticsDashboardProps) {
   const { toast } = useToast();
+  const showOpsBrief = isElevatedUserRole(userRole);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [renderAdvanced, setRenderAdvanced] = useState(false);
   const [chartBuilderOpen, setChartBuilderOpen] = useState(false);
@@ -880,6 +899,26 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
             <p className="text-base text-muted-foreground">{storeName} performance insights</p>
        </div>
 
+      {showOpsBrief && vehicles.length > 0 && (
+        <div className="space-y-4">
+          <MorningBrief
+            vehicles={vehicles}
+            driveLogs={driveLogs}
+            advisors={advisors}
+            storeName={storeName}
+            onNavigate={onNavigateTab}
+          />
+          <CoachingQueue advisors={advisors} driveLogs={driveLogs} />
+          <WeeklyStoreReport
+            vehicles={vehicles}
+            driveLogs={driveLogs}
+            advisors={advisors}
+            storeName={storeName}
+            storeCode={storeCode}
+          />
+        </div>
+      )}
+
       {/* Mobile/Tablet: Modern Sheet-based Filters */}
       <div className="lg:hidden">
         <Sheet>
@@ -1415,6 +1454,16 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
 
 
       {(userRole === 'manager' || userRole === 'moderator') && (
+        <>
+          {vehicles.length > 0 && (
+            <RegionalLite
+              storeCode={storeCode}
+              storeName={storeName}
+              vehicles={vehicles}
+              driveLogs={driveLogs}
+              advisors={advisors}
+            />
+          )}
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-primary/5 shadow-lg hover:shadow-xl transition-all duration-300">
           <CardHeader className="pb-3">
             <div className="flex flex-col gap-3">
@@ -1484,9 +1533,10 @@ export default function AnalyticsDashboard({ driveLogs, advisors, userRole, stor
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
-      {userRole === 'manager' && (
+      {showOpsBrief && (
         <div className="flex justify-center">
           <Button variant="outline" onClick={() => setShowAdvanced(!showAdvanced)} className="h-9 border-border/40">
             <span className="text-sm">{showAdvanced ? 'Hide Advanced' : 'Show Advanced'}</span>

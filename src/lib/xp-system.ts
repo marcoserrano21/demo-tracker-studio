@@ -8,12 +8,14 @@ export const XP_REWARDS = {
   DRIVE_COMPLETED: 10,
   ACHIEVEMENT_UNLOCKED: 25,
   ISSUE_DISCOVERED: 5,
-  DETAILED_REVIEW: 15, // 2+ paragraphs
+  DETAILED_REVIEW: 15, // 2+ paragraphs / quality feedback
   PERFECT_RATING: 5, // Bonus for 5-star rating
   STREAK_BONUS_MULTIPLIER: 0.1, // 10% bonus per streak day (max 5 days)
   WEEKEND_BONUS: 5, // Extra XP for weekend drives
   CUSTOMER_PURCHASE: 50,
-  FSD_ATTACH: 35,
+  FSD_ACTIVATED: 25,
+  FSD_ATTACH: 40,
+  ON_TIME_RETURN: 10,
 } as const;
 
 // Level System Configuration
@@ -137,6 +139,8 @@ export function calculateDriveXP(params: {
   isWeekend?: boolean;
   customerPurchased?: boolean;
   fsdSubscribed?: boolean;
+  fsdActivated?: boolean;
+  onTimeReturn?: boolean;
 }): {
   baseXP: number;
   bonuses: Array<{ reason: string; amount: number }>;
@@ -155,6 +159,10 @@ export function calculateDriveXP(params: {
   if (params.reviewLength && params.reviewLength >= 2) {
     bonuses.push({ reason: 'Detailed Review', amount: XP_REWARDS.DETAILED_REVIEW });
     totalXP += XP_REWARDS.DETAILED_REVIEW;
+  } else if (params.reviewLength && params.reviewLength >= 1) {
+    const qualityBonus = Math.floor(XP_REWARDS.DETAILED_REVIEW / 2);
+    bonuses.push({ reason: 'Feedback Logged', amount: qualityBonus });
+    totalXP += qualityBonus;
   }
   
   // Issue discovered bonus
@@ -179,10 +187,22 @@ export function calculateDriveXP(params: {
     totalXP += XP_REWARDS.WEEKEND_BONUS;
   }
 
+  // On-time return
+  if (params.onTimeReturn) {
+    bonuses.push({ reason: 'On-Time Return', amount: XP_REWARDS.ON_TIME_RETURN });
+    totalXP += XP_REWARDS.ON_TIME_RETURN;
+  }
+
   // Customer purchase conversion bonus
   if (params.customerPurchased) {
     bonuses.push({ reason: 'Customer Purchase', amount: XP_REWARDS.CUSTOMER_PURCHASE });
     totalXP += XP_REWARDS.CUSTOMER_PURCHASE;
+  }
+
+  // FSD (Supervised) activated during demo
+  if (params.fsdActivated) {
+    bonuses.push({ reason: 'FSD Activated', amount: XP_REWARDS.FSD_ACTIVATED });
+    totalXP += XP_REWARDS.FSD_ACTIVATED;
   }
 
   // FSD Monthly Subscription attach bonus
@@ -209,9 +229,12 @@ export function calculateHistoricalXP(logs: Array<{
   issueDetected?: boolean;
   customerPurchased?: boolean;
   fsdSubscribed?: boolean;
+  fsdActivated?: boolean;
   issuesReported?: string[];
   checkoutTime?: { seconds: number } | any;
   endTime?: { seconds: number } | any;
+  startTime?: { seconds: number } | any;
+  expectedDuration?: number;
 }>): number {
   let totalXP = 0;
   
@@ -233,6 +256,8 @@ export function calculateHistoricalXP(logs: Array<{
       const paragraphs = reviewText.split('\n\n').filter(p => p.trim().length > 0);
       if (paragraphs.length >= 2) {
         totalXP += XP_REWARDS.DETAILED_REVIEW;
+      } else if (paragraphs.length >= 1) {
+        totalXP += Math.floor(XP_REWARDS.DETAILED_REVIEW / 2);
       }
     }
     
@@ -243,6 +268,10 @@ export function calculateHistoricalXP(logs: Array<{
 
     if (log.customerPurchased) {
       totalXP += XP_REWARDS.CUSTOMER_PURCHASE;
+    }
+
+    if (log.fsdActivated) {
+      totalXP += XP_REWARDS.FSD_ACTIVATED;
     }
 
     if (log.fsdSubscribed) {

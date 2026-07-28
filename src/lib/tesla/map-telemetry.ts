@@ -13,6 +13,7 @@ export function mapVehicleDataToTelemetry(
   const response = (root.response ?? root) as Record<string, unknown>;
   const chargeState = (response.charge_state ?? {}) as Record<string, unknown>;
   const driveState = (response.drive_state ?? {}) as Record<string, unknown>;
+  const vehicleState = (response.vehicle_state ?? {}) as Record<string, unknown>;
 
   const batteryRaw = chargeState.battery_level ?? chargeState.usable_battery_level;
   const batteryLevel =
@@ -33,7 +34,20 @@ export function mapVehicleDataToTelemetry(
         ? driveState.corrected_longitude
         : undefined;
 
-  if (batteryLevel === undefined && lat === undefined && lng === undefined) {
+  // Best-effort FSD/autopilot engaged signals across API shapes
+  const autopilot =
+    (response.autopilot_state as Record<string, unknown> | undefined) ??
+    (vehicleState.autopilot_state as Record<string, unknown> | undefined);
+  const autopilotType =
+    typeof autopilot?.autopilot_state_type === 'string'
+      ? String(autopilot.autopilot_state_type)
+      : '';
+  const fsdFromFlags =
+    ['Autopilot', 'FSD', 'TrafficAwareCruiseControl'].includes(autopilotType) ||
+    autopilot?.state === 'Active' ||
+    vehicleState.autopilot === true;
+
+  if (batteryLevel === undefined && lat === undefined && lng === undefined && !fsdFromFlags) {
     return null;
   }
 
@@ -46,6 +60,7 @@ export function mapVehicleDataToTelemetry(
       typeof chargeState.charging_state === 'string'
         ? chargeState.charging_state
         : undefined,
+    fsdActive: fsdFromFlags || undefined,
     fetchedAt: Date.now(),
   };
 }

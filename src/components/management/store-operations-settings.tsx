@@ -14,6 +14,7 @@ import {
   updateStoreSettingsClient,
 } from '@/lib/store-settings-client';
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/types';
+import { MorningBriefLandingSetting } from '@/components/morning-brief-landing-setting';
 
 export function StoreOperationsSettings({ storeCode }: { storeCode: string }) {
   const { firestore } = useFirebase();
@@ -124,6 +125,8 @@ export function StoreOperationsSettings({ storeCode }: { storeCode: string }) {
             </Button>
           </div>
         </div>
+
+        <MorningBriefLandingSetting storeCode={storeCode} />
       </CardContent>
     </Card>
   );

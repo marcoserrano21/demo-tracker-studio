@@ -91,9 +91,10 @@ interface HistoryTableProps {
   vehicles: Vehicle[];
   onUpdateLog: (log: DriveLog) => void;
   isCompact?: boolean;
+  editorName: string;
 }
 
-export default function HistoryTable({ driveLogs, userRole, storeCode, paginationControls, advisors, vehicles, onUpdateLog, isCompact = false }: HistoryTableProps) {
+export default function HistoryTable({ driveLogs, userRole, storeCode, paginationControls, advisors, vehicles, onUpdateLog, isCompact = false, editorName }: HistoryTableProps) {
     const { firestore } = useFirebase();
     const [confirmName, setConfirmName] = useState('');
     const [logToDelete, setLogToDelete] = useState<string | null>(null);
@@ -238,16 +239,16 @@ export default function HistoryTable({ driveLogs, userRole, storeCode, paginatio
                       {log.feedback && <div className="flex items-start"><MessageSquare className="w-4 h-4 mr-2 mt-0.5 text-muted-foreground" /> <strong>Feedback:</strong> <p className="ml-1 break-words leading-relaxed">{log.feedback}</p></div>}
                       <div className="flex items-center"><ShoppingBag className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Customer order:</strong> <span className="ml-2">{renderCustomerOrderBadge(log)}</span></div>
                   </div>
-                   {userRole === 'manager' && (
-                    <div className="flex justify-end space-x-2 pt-4">
+                   <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="outline" size="sm" onClick={() => setEditingLog(log)}>
                             <Edit className="h-4 w-4 mr-2" />Edit
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => openDeleteDialog(log.id)}>
-                            <Trash2 className="h-4 w-4 mr-2" />Delete
-                        </Button>
+                        {userRole === 'manager' && (
+                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => openDeleteDialog(log.id)}>
+                              <Trash2 className="h-4 w-4 mr-2" />Delete
+                          </Button>
+                        )}
                     </div>
-                )}
               </AccordionContent>
             </AccordionItem>
           ))}
@@ -284,9 +285,7 @@ export default function HistoryTable({ driveLogs, userRole, storeCode, paginatio
                   <TableHead className="min-w-[100px]">Duration</TableHead>
                   <TableHead className="min-w-[130px]">Customer Order</TableHead>
                   <TableHead className="min-w-[200px]">Feedback/Issues</TableHead>
-                  {userRole === 'manager' && (
-                    <TableHead className="text-right min-w-[100px]">Actions</TableHead>
-                  )}
+                  <TableHead className="text-right min-w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -342,25 +341,27 @@ export default function HistoryTable({ driveLogs, userRole, storeCode, paginatio
                             )}
                         </div>
                     </TableCell>
-                    {userRole === 'manager' && (
-                      <TableCell className="text-right">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingLog(log)}
-                        >
-                            <Edit className="h-4 w-4" />
-                        </Button>
+                    <TableCell className="text-right">
+                      <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditingLog(log)}
+                          aria-label="Edit drive log"
+                      >
+                          <Edit className="h-4 w-4" />
+                      </Button>
+                      {userRole === 'manager' && (
                         <Button
                           variant="ghost"
                           size="icon"
                           className="text-red-500 hover:text-red-600"
                           onClick={() => openDeleteDialog(log.id)}
+                          aria-label="Delete drive log"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </TableCell>
-                    )}
+                      )}
+                    </TableCell>
                   </TableRow>
                 )})}
               </TableBody>
@@ -410,6 +411,7 @@ export default function HistoryTable({ driveLogs, userRole, storeCode, paginatio
             advisors={advisors}
             vehicles={vehicles}
             onUpdateLog={onUpdateLog}
+            editorName={editorName}
         />
       )}
     </>

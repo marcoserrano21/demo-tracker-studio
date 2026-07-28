@@ -7,7 +7,7 @@ import type { DriveLog, Advisor, Vehicle, ManualAward, StoreInfo } from '@/lib/t
 import { achievements, Achievement, AchievementCategory, getDriveDate } from '@/lib/achievements';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Trophy, Star, Shield, Zap, Puzzle, Award, Lock, Check, Search, Car, TrendingUp, Users } from 'lucide-react';
+import { Trophy, Star, Shield, Zap, Puzzle, Award, Lock, Check, Search, Car, TrendingUp, Users, HelpCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { ScrollArea } from './ui/scroll-area';
@@ -20,7 +20,8 @@ import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { getLevelFromXP, getRankForLevel, calculateHistoricalXP } from '@/lib/xp-system';
-import { buildLeaderboardMetrics, compareLeaderboardEntries, withDenseRanks } from '@/lib/leaderboard-rank';
+import { buildLeaderboardMetrics, compareLeaderboardEntries, withDenseRanks, LEADERBOARD_WEIGHTS, type LeaderboardMetrics } from '@/lib/leaderboard-rank';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface HallOfFameProps {
   driveLogs: DriveLog[];
@@ -76,14 +77,10 @@ export default function HallOfFame({ driveLogs, advisors, vehicles, manualAwards
   }
 
   const advisorLeaderboard = useMemo(() => {
-    const scores: Record<string, {
+    const scores: Record<string, LeaderboardMetrics & {
       advisor: Advisor;
       recentAchievements: (Achievement & { unlockedAt: Date })[];
       achievementCount: number;
-      driveCount: number;
-      purchaseCount: number;
-      totalXP: number;
-      averageRating: number;
     }> = {};
 
     advisors.forEach(adv => {
@@ -409,7 +406,37 @@ export default function HallOfFame({ driveLogs, advisors, vehicles, manualAwards
                               </div>
                               <div className="text-center">
                                 <div className="text-xl sm:text-2xl font-bold">#{displayedAdvisorData.rank}</div>
-                                <div className="text-[10px] sm:text-xs font-medium text-muted-foreground">Rank</div>
+                                <div className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center justify-center gap-1">
+                                  Rank
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <button
+                                        type="button"
+                                        className="inline-flex text-muted-foreground hover:text-foreground"
+                                        aria-label="Why this rank?"
+                                      >
+                                        <HelpCircle className="h-3.5 w-3.5" />
+                                      </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-72 text-sm" align="center">
+                                      <p className="font-semibold mb-1">Why this rank?</p>
+                                      <p className="text-xs text-muted-foreground mb-2">
+                                        Habit score weights (higher = stronger pull):
+                                      </p>
+                                      <ul className="space-y-1 text-xs">
+                                        <li>Purchases · {LEADERBOARD_WEIGHTS.PURCHASE}</li>
+                                        <li>FSD-sub attach · {LEADERBOARD_WEIGHTS.FSD_SUB}</li>
+                                        <li>Demos · {LEADERBOARD_WEIGHTS.DEMO}</li>
+                                        <li>FSD activation · {LEADERBOARD_WEIGHTS.FSD_ACTIVATED}</li>
+                                        <li>Feedback quality · {LEADERBOARD_WEIGHTS.FEEDBACK_QUALITY}</li>
+                                        <li>On-time Finish · {LEADERBOARD_WEIGHTS.ON_TIME}</li>
+                                      </ul>
+                                      <p className="mt-2 text-[10px] text-muted-foreground">
+                                        Habit score: {displayedAdvisorData.habitScore}
+                                      </p>
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
                               </div>
                             </div>
                           </div>

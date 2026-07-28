@@ -2,15 +2,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import type { Vehicle, Advisor, UserRole, DriveLog, VehicleIssue } from '@/lib/types';
+import type { Vehicle, Advisor, UserRole, DriveLog, VehicleIssue, FsdSubscriptionAnswer } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import {
   Sheet,
 } from './ui/sheet';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Loader2, CheckCircle, Star, Battery, User, ShoppingBag, Sparkles } from 'lucide-react';
+import { Loader2, CheckCircle, Star, Battery, User, ShoppingBag, Sparkles, Gauge } from 'lucide-react';
 import { BatteryLevelPicker } from './battery-level-picker';
 import { useFirebase } from '@/firebase';
 import { doc, serverTimestamp, writeBatch, collection, Timestamp } from 'firebase/firestore';
@@ -18,7 +17,13 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { detectIssuesFromKeywords } from '@/lib/issue-keywords';
 import { detectFsdSubscriptionFromKeywords } from '@/lib/fsd-keywords';
-import { findActiveDriveLog } from '@/lib/drive-log-utils';
+import { calculateHabitStreak, calculateDemoDayStreak } from '@/lib/habit-streak';
+import {
+  estimateDemoEndBattery,
+  findActiveDriveLog,
+  getDemoBatteryDropPercent,
+  getDriveStartDate,
+} from '@/lib/drive-log-utils';
 import { cn } from '@/lib/utils';
 import { awardXP } from '@/lib/xp-client';
 import { calculateDriveXP, countParagraphs } from '@/lib/xp-system';
@@ -32,7 +37,6 @@ import {
   DriveFlowSection,
   DriveFlowSheetContent,
   DriveFlowVehicleHero,
-  driveFlowInputClass,
   resolveAdvisorId,
   resolveAdvisorName,
 } from './drive-flow-sheet-ui';
@@ -49,7 +53,46 @@ interface CheckinSheetProps {
   onVehicleUpdate: (updatedVehicle: Partial<Vehicle> & { id: string }) => void;
 }
 
-export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = [], storeCode, userRole, driveLog, driveLogs = [], onVehicleUpdate }: CheckinSheetProps) {
+function KpiChoiceRow({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-foreground">{label}</p>
+      <div className="flex flex-wrap gap-2" role="group" aria-label={label}>
+        {options.map((opt) => {
+          const selected = value === opt.value;
+          return (
+            <Button
+              key={opt.value}
+              type="button"
+              size="sm"
+              variant={selected ? 'default' : 'outline'}
+              className={cn(
+                'min-w-[3rem] rounded-lg font-semibold',
+                selected && 'ring-2 ring-primary/30'
+              )}
+              aria-pressed={selected}
+              onClick={() => onChange(opt.value)}
+            >
+              {opt.label}
+            </Button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = [], storeCode, driveLog, driveLogs = [], onVehicleUpdate }: CheckinSheetProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
@@ -60,8 +103,21 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
   const [customerPurchased, setCustomerPurchased] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [fsdDetectedFromFeedback, setFsdDetectedFromFeedback] = useState(false);
+  const [fsdSubscriptionAttached, setFsdSubscriptionAttached] = useState<FsdSubscriptionAnswer | ''>('');
   
   const formRef = useRef<HTMLFormElement>(null);
+
+  const resolvedDriveLog = driveLog ?? findActiveDriveLog(vehicle, driveLogs);
+  const isDemoCheckin = vehicle.status !== 'Charging' && resolvedDriveLog?.purpose === 'Demo';
+  const checkoutBattery = resolvedDriveLog?.startBattery ?? vehicle.batteryLevel;
+  const driveStartDate = getDriveStartDate(resolvedDriveLog?.startTime);
+  const elapsedMinutes =
+    driveStartDate != null ? Math.max(0, (Date.now() - driveStartDate.getTime()) / 60_000) : null;
+  const batteryDropPercent = getDemoBatteryDropPercent(elapsedMinutes);
+  const autoEndBattery = estimateDemoEndBattery(checkoutBattery, {
+    startTime: resolvedDriveLog?.startTime,
+  });
+  const fleetFsdHint = vehicle.fsdActiveTelemetry === true;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -77,9 +133,24 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
   }, [isOpen, driveLog, driveLogs, vehicle, advisors]);
 
   useEffect(() => {
+    if (!isOpen) return;
+    // Prefill from duration-based estimate; picker stays editable.
+    if (vehicle.status === 'Charging') {
+      setEndBattery(vehicle.batteryLevel);
+    } else {
+      const activeLog = driveLog ?? findActiveDriveLog(vehicle, driveLogs);
+      const start = activeLog?.startBattery ?? vehicle.batteryLevel;
+      setEndBattery(estimateDemoEndBattery(start, { startTime: activeLog?.startTime }));
+    }
+  }, [isOpen, vehicle, driveLog, driveLogs]);
+
+  useEffect(() => {
     const detected = detectFsdSubscriptionFromKeywords(feedbackText);
     setFsdDetectedFromFeedback(detected);
-    if (detected) setCustomerPurchased(true);
+    if (detected) {
+      setCustomerPurchased(true);
+      setFsdSubscriptionAttached('Y');
+    }
   }, [feedbackText]);
 
 
@@ -92,21 +163,9 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
       setCustomerPurchased(false);
       setFeedbackText('');
       setFsdDetectedFromFeedback(false);
+      setFsdSubscriptionAttached('');
     }
     setIsOpen(open);
-  };
-
-  const handleBatteryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEndBattery(value === '' ? '' : parseInt(value, 10));
-  };
-  
-  const handleBatteryBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    let value = parseInt(e.target.value, 10);
-     if (isNaN(value)) value = 1;
-    if (value > 100) value = 100;
-    if (value < 1) value = 1;
-    setEndBattery(value);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -166,7 +225,6 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
 
     const formData = new FormData(event.currentTarget);
     const advisor = resolveAdvisorName(advisors, selectedAdvisor);
-    const currentEndBattery = formData.get('endBattery');
     const feedback = formData.get('feedback') as string;
     
     if (!advisor) {
@@ -174,23 +232,22 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
       setIsLoading(false);
       return;
     }
-    
-    if (currentEndBattery === null || currentEndBattery === '') {
-        toast({ variant: 'destructive', title: 'Error', description: 'Current battery level is required.' });
+
+    // Prefill uses duration-based drop; advisors can override via the picker.
+    const formBattery = formData.get('endBattery');
+    const startBattery = activeDriveLog.startBattery ?? vehicle.batteryLevel;
+    const numericEndBattery =
+      formBattery !== null && formBattery !== ''
+        ? Number(formBattery)
+        : estimateDemoEndBattery(startBattery, { startTime: activeDriveLog.startTime });
+
+    if (!Number.isFinite(numericEndBattery) || numericEndBattery < 0 || numericEndBattery > 100) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Enter a valid battery level (0–100).' });
         setIsLoading(false);
         return;
     }
-
-    const numericEndBattery = Number(currentEndBattery);
 
     const startTime = activeDriveLog.startTime instanceof Timestamp ? activeDriveLog.startTime.toDate() : new Date(activeDriveLog.startTime);
-    const driveDurationSeconds = (new Date().getTime() - startTime.getTime()) / 1000;
-
-    if (activeDriveLog.startBattery === numericEndBattery && driveDurationSeconds > 60) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Battery level cannot be the same as check-out unless the drive is less than 1 minute.' });
-        setIsLoading(false);
-        return;
-    }
     
     let issueDetected = false;
     const fsdFromKeywords = detectFsdSubscriptionFromKeywords(feedback || '');
@@ -198,8 +255,21 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
         issueDetected = detectIssuesFromKeywords(feedback);
     }
 
-    const purchased = (customerPurchased || fsdFromKeywords) && activeDriveLog.purpose === 'Demo';
-    const fsdSubscribed = fsdFromKeywords && activeDriveLog.purpose === 'Demo';
+    const isDemoPurpose = activeDriveLog.purpose === 'Demo';
+    // Sales Outcome is optional at check-in — blank purchase / FSD-sub is allowed.
+    const fsdSubAnswer: FsdSubscriptionAnswer | '' = fsdSubscriptionAttached || (fsdFromKeywords ? 'Y' : '');
+    const purchased = (customerPurchased || fsdSubAnswer === 'Y' || fsdFromKeywords) && isDemoPurpose;
+    const fsdSubscribed = isDemoPurpose && (fsdSubAnswer === 'Y' || fsdFromKeywords);
+    // FSD Supervised is always logged as activated for completed demos (no advisor Y/N).
+    const fsdWasActivated = isDemoPurpose;
+    const fsdActivatedSource = isDemoPurpose
+      ? fleetFsdHint
+        ? 'fleet_api'
+        : 'advisor'
+      : undefined;
+
+    const expectedMs = (activeDriveLog.expectedDuration || vehicle.expectedDuration || 0) * 60 * 1000;
+    const onTimeReturn = expectedMs > 0 ? Date.now() <= startTime.getTime() + expectedMs : false;
 
     const newStatus = issueDetected ? 'Needs Attention' : 'Available';
 
@@ -246,6 +316,17 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
         driveLogUpdateData.purchaseTrim = vehicle.trim;
     }
 
+    if (isDemoPurpose) {
+        driveLogUpdateData.demoCompleted = true;
+        driveLogUpdateData.fsdActivated = fsdWasActivated;
+        if (fsdActivatedSource) {
+          driveLogUpdateData.fsdActivatedSource = fsdActivatedSource;
+        }
+        if (fsdSubAnswer) {
+          driveLogUpdateData.fsdSubscriptionAttached = fsdSubAnswer;
+        }
+    }
+
     if (fsdSubscribed) {
         driveLogUpdateData.fsdSubscribed = true;
         const fsdOrderRef = doc(collection(firestore, `stores/${storeCode}/fsd_orders`));
@@ -260,6 +341,27 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
             advisorName: activeDriveLog.coPilot || advisor,
             driveLogId: activeDriveLog.id,
             notes: feedback || undefined,
+            createdAt: serverTimestamp(),
+            createdBy: advisor,
+        });
+    }
+
+    // Lightweight CRM outcome (no PII) — only when purchase / FSD-sub are set at check-in.
+    // FSD activated alone does not create an outcome (it is always true for demos).
+    // Advisors can complete outcomes later via History → Edit; that path upserts + audits.
+    if (isDemoPurpose && (purchased || fsdSubscribed)) {
+        const outcomeRef = doc(collection(firestore, `stores/${storeCode}/demo_outcomes`));
+        batch.set(outcomeRef, {
+            storeId: storeCode,
+            driveLogId: activeDriveLog.id,
+            vehicleModel: vehicle.model,
+            vehicleTrim: vehicle.trim,
+            vehicleVinLast6: vehicle.vin.slice(-6),
+            advisorName: activeDriveLog.coPilot || advisor,
+            customerPurchased: !!purchased,
+            fsdSubscribed: !!fsdSubscribed,
+            fsdActivated: true,
+            outcomeLabel: `Demo · ${vehicle.model} ···${vehicle.vin.slice(-4)}`,
             createdAt: serverTimestamp(),
             createdBy: advisor,
         });
@@ -286,26 +388,28 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
     batch.commit()
       .then(async () => {
         setIsOpen(false);
-        let description = `Vehicle checked in ${issueDetected ? 'with an issue' : 'successfully'}.`;
-        if (fsdSubscribed) {
-          description = 'FSD subscription + order recorded from feedback. Vehicle checked in.';
-        } else if (purchased) {
-          description = `Vehicle checked in successfully. Customer purchase of ${vehicle.model} ${vehicle.trim} recorded.`;
-        }
-        toast({ title: 'Success', description });
+        toast({
+          title: 'Drive logged',
+          description: 'Fleet updated · FSD logged · performance updated.',
+        });
 
         if (activeDriveLog.purpose === 'Demo') {
           const creditedAdvisor = advisors.find(a => a.name === (activeDriveLog.coPilot || advisor));
           if (creditedAdvisor) {
             const driveDate = startTime;
             const isWeekend = driveDate.getDay() === 0 || driveDate.getDay() === 6;
+            const habit = calculateHabitStreak(driveLogs, creditedAdvisor.name);
+            const streakDays = Math.max(habit.current, calculateDemoDayStreak(driveLogs, creditedAdvisor.name));
             const xpCalculation = calculateDriveXP({
               rating: rating > 0 ? rating : undefined,
               reviewLength: feedback ? countParagraphs(feedback) : 0,
               issueFound: issueDetected,
               isWeekend,
+              streakDays,
               customerPurchased: purchased,
               fsdSubscribed,
+              fsdActivated: fsdWasActivated,
+              onTimeReturn,
             });
             const xpResult = await awardXP(firestore, storeCode, creditedAdvisor.id, xpCalculation.totalXP);
             if (xpResult.success && xpCalculation.totalXP > 0) {
@@ -369,36 +473,45 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
               <DriveFlowFieldHeader
                 icon={Battery}
                 title="Battery level"
-                hint="Match the charge shown on the vehicle screen"
+                hint={
+                  vehicle.status === 'Charging'
+                    ? 'Match the charge shown on the vehicle screen'
+                    : `Defaults to checkout −${batteryDropPercent}% · adjust if needed`
+                }
                 required
               />
               <BatteryLevelPicker
                 name="endBattery"
                 value={endBattery}
                 onChange={setEndBattery}
-                hint="Most advisors tap 80% or 100% after a short demo. Adjust if the screen shows something different."
+                min={0}
+                hint={
+                  vehicle.status === 'Charging'
+                    ? 'Record the charge level when charging completes.'
+                    : `Pre-filled at ${autoEndBattery}% (${checkoutBattery}% − ${batteryDropPercent}). Change only if the screen shows a different level.`
+                }
               />
             </DriveFlowSection>
 
-            {vehicle.status !== 'Charging' && driveLog?.purpose === 'Demo' && (
+            {isDemoCheckin && (
               <>
                 <DriveFlowSection>
                   <DriveFlowFieldHeader
                     icon={Star}
                     title="Feedback & issues"
-                    hint="Optional notes from the demo — keywords auto-flag maintenance items"
+                    hint="Optional but encouraged — keywords auto-flag maintenance · +XP for quality notes"
                   />
                   <Textarea
                     name="feedback"
                     value={feedbackText}
                     onChange={(e) => setFeedbackText(e.target.value)}
-                    placeholder="Customer loved the acceleration. FSD subscribed. Noted a slight rattle…"
+                    placeholder="Customer loved acceleration. Slight rattle noted…"
                     className="min-h-[108px] rounded-xl border border-border/60 bg-background/80 resize-none focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
                   {fsdDetectedFromFeedback && (
                     <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                       <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      FSD subscription + order will be recorded from feedback
+                      FSD subscription detected from feedback — set to Y
                     </p>
                   )}
                 </DriveFlowSection>
@@ -454,35 +567,56 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
                   <DriveFlowFieldHeader
                     icon={ShoppingBag}
                     title="Sales outcome"
-                    hint="Did the customer purchase or order after the demo?"
+                    hint="Optional — purchase + FSD-sub can be filled now or later in History"
                   />
-                  <Button
-                    type="button"
-                    variant={customerPurchased ? 'default' : 'outline'}
-                    className={cn(
-                      'w-full h-auto min-h-12 rounded-xl justify-start gap-3 px-4 py-3 text-left',
-                      customerPurchased && 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600',
+                  <div className="space-y-4">
+                    {fleetFsdHint && (
+                      <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        <Gauge className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                        Fleet API suggested FSD was active during this drive
+                      </p>
                     )}
-                    onClick={() => setCustomerPurchased((prev) => !prev)}
-                    aria-pressed={customerPurchased}
-                  >
-                    <ShoppingBag className="h-5 w-5 shrink-0" aria-hidden />
-                    <span className="flex flex-col items-start gap-0.5">
-                      <span className="font-semibold text-sm">
-                        {customerPurchased ? 'Purchase recorded' : 'Mark customer purchase'}
+                    <p className="text-xs text-muted-foreground">
+                      FSD (Supervised) is logged as activated for every completed demo.
+                    </p>
+                    <KpiChoiceRow
+                      label="FSD subscription attached to order"
+                      value={fsdSubscriptionAttached}
+                      options={[
+                        { value: 'Y', label: 'Y' },
+                        { value: 'N', label: 'N' },
+                        { value: 'NA', label: 'NA' },
+                      ]}
+                      onChange={(v) => setFsdSubscriptionAttached(v as FsdSubscriptionAnswer)}
+                    />
+                    <Button
+                      type="button"
+                      variant={customerPurchased ? 'default' : 'outline'}
+                      className={cn(
+                        'w-full h-auto min-h-12 rounded-xl justify-start gap-3 px-4 py-3 text-left whitespace-normal',
+                        customerPurchased && 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600',
+                      )}
+                      onClick={() => setCustomerPurchased((prev) => !prev)}
+                      aria-pressed={customerPurchased}
+                    >
+                      <ShoppingBag className="h-5 w-5 shrink-0" aria-hidden />
+                      <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                        <span className="font-semibold text-sm">
+                          {customerPurchased ? 'Purchase recorded' : 'Mark purchase / order'}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-xs font-normal whitespace-normal break-words text-wrap max-w-full',
+                            customerPurchased ? 'text-emerald-50/90' : 'text-muted-foreground',
+                          )}
+                        >
+                          {customerPurchased
+                            ? 'Outcome logged · no customer PII · +50 XP'
+                            : 'Optional · no name or contact stored'}
+                        </span>
                       </span>
-                      <span
-                        className={cn(
-                          'text-xs font-normal',
-                          customerPurchased ? 'text-emerald-50/90' : 'text-muted-foreground',
-                        )}
-                      >
-                        {customerPurchased
-                          ? `${vehicle.model} ${vehicle.trim} · +50 XP to My Hub`
-                          : `Tap if they bought or ordered the ${vehicle.model} ${vehicle.trim}`}
-                      </span>
-                    </span>
-                  </Button>
+                    </Button>
+                  </div>
                 </DriveFlowSection>
               </>
             )}

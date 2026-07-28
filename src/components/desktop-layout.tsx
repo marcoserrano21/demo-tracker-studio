@@ -8,7 +8,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, S
 import { Tabs } from '@/components/ui/tabs';
 import { useSearchParams } from 'next/navigation';
 import { Settings, LogOut, ShieldCheck, Shield, UserCog, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
-import { PRIMARY_DASHBOARD_TABS } from '@/lib/dashboard-tabs';
+import { PRIMARY_DASHBOARD_TABS, MORE_DASHBOARD_TABS } from '@/lib/dashboard-tabs';
 import { HubLogo } from './hub-logo';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -36,7 +36,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
-import { canRequestManagerAccess } from '@/lib/demo-users';
+import { canRequestManagerAccess, isElevatedUserRole } from '@/lib/demo-users';
+import { useFirebase } from '@/firebase';
+import { getStoreSettingsClient } from '@/lib/store-settings-client';
 
 const DesktopSidebarTrigger = () => {
     const { state, toggleSidebar } = useSidebar();
@@ -50,8 +52,12 @@ const DesktopSidebarTrigger = () => {
 
 const DynamicSidebarLogo = () => {
     const { state } = useSidebar();
-    return <HubLogo expanded={state === 'expanded'} />;
+    return <HubLogo expanded={state === 'expanded'} showSubtitle={state === 'expanded'} />;
 }
+
+/** Icon-rail alignment: match logo center when collapsed (no left bias). */
+const navMenuButtonClass =
+  'group relative transition-all duration-300 rounded-xl justify-center group-data-[collapsible=icon]:!mx-auto group-data-[collapsible=icon]:!px-0';
 
 function DesktopLayoutContent(props: DashboardLayoutProps) {
   const {
@@ -72,7 +78,7 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
   } = props;
 
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') || advisor.defaultTab || 'my-hub';
+  const initialTab = searchParams.get('tab') || advisor.defaultTab || 'fleet';
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction | null>(null);
 
@@ -84,12 +90,26 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
     initialTab,
   });
 
+  const { firestore } = useFirebase();
   const primaryTabs = PRIMARY_DASHBOARD_TABS;
+  const moreTabs = MORE_DASHBOARD_TABS;
   const allowManagerAccess = canRequestManagerAccess(advisor);
+  const isElevated = isElevatedUserRole(userRole);
 
   const handleManagerLoginSuccess = () => {
-    setUserRole('manager');
+    // Prefer advisor.role when elevating; default to manager for password unlock.
+    const nextRole =
+      advisor.role === 'moderator' || advisor.role === 'manager' ? advisor.role : 'manager';
+    setUserRole(nextRole);
     setAuthDialogOpen(false);
+
+    if (firestore) {
+      void getStoreSettingsClient(firestore, store.code).then((settings) => {
+        if (settings.landOnMorningBrief) {
+          shell.handleTabChange('analytics');
+        }
+      });
+    }
   };
 
   const handleSwitchToAdvisor = () => {
@@ -118,6 +138,7 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
         scheduledDemos={shell.scheduledDemos}
         vehicleIssues={shell.vehicleIssues}
         onLogUpdate={shell.handleLogUpdate}
+        onNavigateTab={shell.handleTabChange}
       />
     </Tabs>
   );
@@ -141,18 +162,18 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
             </Tooltip>
           </TooltipProvider>
         </SidebarHeader>
-        <SidebarContent className="px-2 overflow-hidden flex flex-col">
-            <SidebarGroup className="py-0 flex-shrink-0">
-                <SidebarGroupLabel className="px-3 py-1 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider bg-sidebar-accent/30 rounded-lg mb-1 border border-sidebar-border/30">Navigation</SidebarGroupLabel>
-                <SidebarMenu className="space-y-0.5 min-h-0">
+        <SidebarContent className="px-2 overflow-hidden flex flex-col items-stretch group-data-[collapsible=icon]:items-center">
+            <SidebarGroup className="py-0 flex-shrink-0 w-full group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+                <SidebarGroupLabel className="px-3 py-1 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider bg-sidebar-accent/30 rounded-lg mb-1 border border-sidebar-border/30">Find → Start → Finish</SidebarGroupLabel>
+                <SidebarMenu className="space-y-0.5 min-h-0 w-full group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
                     {primaryTabs.map(tab => (
-                        <SidebarMenuItem key={tab.value}>
+                        <SidebarMenuItem key={tab.value} className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
                             <SidebarMenuButton 
                                 onClick={() => shell.handleTabChange(tab.value)}
                                 isActive={shell.activeTab === tab.value}
                                 tooltip={tab.label}
                                 className={cn(
-                                    "group relative transition-all duration-300 rounded-xl pl-1.5",
+                                    navMenuButtonClass,
                                     "hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/8 hover:to-primary/10",
                                     "hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20",
                                     "active:scale-[0.98] active:transition-transform active:duration-150",
@@ -177,42 +198,66 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
                 </SidebarMenu>
             </SidebarGroup>
             
-            <div className="mt-2 flex-shrink-0">
+            <div className="mt-2 flex-shrink-0 w-full group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
                 <SidebarSeparator className="mb-2 bg-gradient-to-r from-transparent via-sidebar-border to-transparent"/>
-                <SidebarGroup className="py-0">
-                    <SidebarGroupLabel className="px-3 py-1 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider bg-sidebar-accent/30 rounded-lg mb-1 border border-sidebar-border/30">Workspace</SidebarGroupLabel>
-                    <SidebarMenu className="space-y-0.5 min-h-0">
-                        {userRole === 'manager' ? (
-                            <SidebarMenuItem>
+                <SidebarGroup className="py-0 w-full group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+                    <SidebarGroupLabel className="px-3 py-1 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider bg-sidebar-accent/30 rounded-lg mb-1 border border-sidebar-border/30">More</SidebarGroupLabel>
+                    <SidebarMenu className="space-y-0.5 min-h-0 w-full group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+                    {moreTabs.map(tab => (
+                        <SidebarMenuItem key={tab.value} className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
+                            <SidebarMenuButton
+                                onClick={() => shell.handleTabChange(tab.value)}
+                                isActive={shell.activeTab === tab.value}
+                                tooltip={tab.label}
+                                className={cn(
+                                    navMenuButtonClass,
+                                    "hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/8 hover:to-primary/10",
+                                    "hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20",
+                                    "active:scale-[0.98] active:transition-transform active:duration-150",
+                                    shell.activeTab === tab.value && "bg-gradient-to-r from-primary/15 to-primary/8 shadow-lg shadow-primary/20 border border-primary/30 text-sidebar-accent-foreground"
+                                )}
+                                icon={React.createElement(tab.icon, {
+                                    className: cn(
+                                        "transition-all duration-300",
+                                        shell.activeTab === tab.value && "text-primary scale-105"
+                                    )
+                                })}
+                            >
+                                <span className="transition-all duration-300">{tab.label}</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                        {isElevated ? (
+                            <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
                                 <SidebarMenuButton 
                                     onClick={handleSwitchToAdvisor} 
                                     tooltip="Switch to Advisor View" 
-                                    className="group transition-all duration-300 rounded-xl hover:bg-gradient-to-r hover:from-amber-500/10 hover:via-amber-500/8 hover:to-amber-500/10 hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98] pl-1.5"
+                                    className={cn(navMenuButtonClass, "hover:bg-gradient-to-r hover:from-amber-500/10 hover:via-amber-500/8 hover:to-amber-500/10 hover:shadow-lg hover:shadow-amber-500/10 active:scale-[0.98]")}
                                     icon={React.createElement(Shield, { className: "transition-all duration-300 group-hover:text-amber-500" })}
                                 >
                                     Switch to Advisor
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         ) : allowManagerAccess ? (
-                            <SidebarMenuItem>
+                            <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
                                 <SidebarMenuButton 
                                     onClick={() => setAuthDialogOpen(true)} 
                                     tooltip="Manager Access" 
-                                    className="group transition-all duration-300 rounded-xl hover:bg-gradient-to-r hover:from-emerald-500/10 hover:via-emerald-500/8 hover:to-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98] pl-1.5"
+                                    className={cn(navMenuButtonClass, "hover:bg-gradient-to-r hover:from-emerald-500/10 hover:via-emerald-500/8 hover:to-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98]")}
                                     icon={React.createElement(ShieldCheck, { className: "transition-all duration-300 group-hover:text-emerald-500" })}
                                 >
                                     Manager Access
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         ) : null}
-                        {userRole === 'manager' && (
-                            <SidebarMenuItem>
+                        {isElevated && (
+                            <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
                                 <SidebarMenuButton 
                                     onClick={() => shell.handleTabChange('management')} 
                                     isActive={shell.activeTab === 'management'} 
                                     tooltip="Management" 
                                     className={cn(
-                                        "group relative transition-all duration-300 rounded-xl pl-1.5",
+                                        navMenuButtonClass,
                                         "hover:bg-gradient-to-r hover:from-purple-500/10 hover:via-purple-500/8 hover:to-purple-500/10",
                                         "hover:shadow-lg hover:shadow-purple-500/10 active:scale-[0.98]",
                                         shell.activeTab === 'management' && "bg-gradient-to-r from-purple-500/15 to-purple-500/8 shadow-lg shadow-purple-500/20 border border-purple-500/30"
@@ -228,13 +273,13 @@ function DesktopLayoutContent(props: DashboardLayoutProps) {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         )}
-                        <SidebarMenuItem>
+                        <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
                            <SidebarMenuButton 
                                 onClick={() => shell.handleTabChange('settings')} 
                                 isActive={shell.activeTab === 'settings'} 
                                 tooltip="Settings" 
                                 className={cn(
-                                    "group relative transition-all duration-300 rounded-xl pl-1.5",
+                                    navMenuButtonClass,
                                     "hover:bg-gradient-to-r hover:from-cyan-500/10 hover:via-cyan-500/8 hover:to-cyan-500/10",
                                     "hover:shadow-lg hover:shadow-cyan-500/10 active:scale-[0.98]",
                                     shell.activeTab === 'settings' && "bg-gradient-to-r from-cyan-500/15 to-cyan-500/8 shadow-lg shadow-cyan-500/20 border border-cyan-500/30"

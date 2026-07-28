@@ -7,9 +7,10 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetFooter
 import { Button } from './ui/button';
 import type { UserRole } from '@/lib/types';
 import { HubLogo } from './hub-logo';
-import { Car, History, BarChart, Calendar, Settings, Users, LogOut, Trophy, User, Cog, Bell, Shield, ShieldCheck, UserCog } from 'lucide-react';
+import { Car, History, BarChart, Calendar, Settings, Users, LogOut, Trophy, User, Cog, Bell, Shield, ShieldCheck, UserCog, Search, Play, CheckCircle2 } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
+import { isElevatedUserRole } from '@/lib/demo-users';
 
 interface Tab {
   value: string;
@@ -43,7 +44,10 @@ const ICONS: { [key: string]: React.ElementType } = {
     Bell,
     Shield,
     ShieldCheck,
-    UserCog
+    UserCog,
+    Search,
+    Play,
+    CheckCircle2,
 };
 
 export function HamburgerMenu({ 
@@ -111,12 +115,12 @@ export function HamburgerMenu({
         <SheetContent side="left" className="w-[280px] p-0 flex flex-col top-16 h-auto rounded-b-lg border-l border-border/40 backdrop-blur-md bg-background/95">
           <SheetHeader className='p-4 border-b border-border/40 bg-gradient-to-r from-primary/5 via-transparent to-primary/5'>
              <SheetTitle className='flex items-center gap-3'>
-                <HubLogo />
+                <HubLogo expanded showSubtitle />
             </SheetTitle>
           </SheetHeader>
           <div className="flex-grow overflow-y-auto p-4 space-y-4">
             <nav className="flex flex-col space-y-1">
-              <p className="px-3 py-1.5 text-xs font-semibold text-foreground/60 uppercase tracking-wider bg-accent/30 rounded-lg mb-2 border border-border/30">Navigation</p>
+              <p className="px-3 py-1.5 text-xs font-semibold text-foreground/60 uppercase tracking-wider bg-accent/30 rounded-lg mb-2 border border-border/30">Find → Start → Finish</p>
               {primaryTabs.map(createMenuButton)}
             </nav>
             <div className="my-3">
@@ -124,9 +128,9 @@ export function HamburgerMenu({
             </div>
             <nav className="flex flex-col space-y-1">
               <p className="px-3 py-1.5 text-xs font-semibold text-foreground/60 uppercase tracking-wider bg-gradient-to-r from-accent/40 via-accent/30 to-accent/40 rounded-lg mb-2 border border-border/30">
-                Workspace
+                More
               </p>
-              {userRole === 'manager' ? (
+              {isElevatedUserRole(userRole) ? (
                  <Button 
                    variant="ghost" 
                    className="justify-start w-full transition-all duration-300 rounded-xl hover:bg-gradient-to-r hover:from-green-500/10 hover:via-green-500/8 hover:to-green-500/10 hover:shadow-lg hover:shadow-green-500/10" 

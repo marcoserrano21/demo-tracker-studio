@@ -7,16 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Sheet,
 } from './ui/sheet';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { cn } from '@/lib/utils';
@@ -51,6 +41,13 @@ import {
   resolveAdvisorId,
   resolveAdvisorName,
 } from './drive-flow-sheet-ui';
+import { isBatteryBlocked, BATTERY_BLOCK_PERCENT } from '@/lib/battery-thresholds';
+import {
+  canStartScheduledDrive,
+  isScheduledDriveTooEarly,
+  isWithinScheduleReserveWindow,
+  SCHEDULE_EARLY_START_MINUTES,
+} from '@/lib/drive-log-utils';
 
 interface CheckoutSheetProps {
   isOpen: boolean;
@@ -65,6 +62,8 @@ interface CheckoutSheetProps {
   driveLog?: DriveLog;
   vehicles?: Vehicle[];
   onVehicleUpdate: (updatedVehicle: Partial<Vehicle> & { id: string }) => void;
+  /** Prefill purpose when opening (e.g. Charge CTA → Charging). */
+  initialPurpose?: 'Demo' | 'Charging' | 'Other';
 }
 
 export default function CheckoutSheet({
@@ -79,13 +78,12 @@ export default function CheckoutSheet({
   isScheduledDriveStart = false,
   driveLog,
   vehicles = [],
-  onVehicleUpdate
+  onVehicleUpdate,
+  initialPurpose,
 }: CheckoutSheetProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
-  const [showLowBatteryWarning, setShowLowBatteryWarning] = useState(false);
-  const [checkoutFormData, setCheckoutFormData] = useState<FormData | null>(null);
 
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | undefined>(vehicle?.id);
   const selectedVehicle = useMemo(() => {
@@ -176,12 +174,17 @@ export default function CheckoutSheet({
         // Reset fields
         if(userRole !== 'manager') setBatteryLevel('');
         setOtherPurposeDescription('');
-        setPurpose('Demo');
+        setPurpose(initialPurpose || 'Demo');
+        if (initialPurpose === 'Charging') {
+          setIsScheduled(false);
+          setDuration(60);
+          if (currentAdvisor) setCoPilot(currentAdvisor.id);
+        }
         setDate(new Date());
         setSelectedTime('');
         setCalendarMonth(new Date());
     }
-  }, [isOpen, vehicle, isScheduledDriveStart, driveLog, currentAdvisor, userRole, advisors]);
+  }, [isOpen, vehicle, isScheduledDriveStart, driveLog, currentAdvisor, userRole, advisors, initialPurpose]);
 
   useEffect(() => {
     // Reset duration when purpose changes unless it's a scheduled drive start
@@ -249,60 +252,75 @@ export default function CheckoutSheet({
 
   const handleStartScheduledDrive = async (formData: FormData) => {
     if (!firestore || !driveLog || !selectedVehicle) return;
-    
-    setIsLoading(true);
+
     const advisor = resolveAdvisorName(advisors, formData.get('advisor') as string);
     const batteryValue = userRole === 'manager' ? formData.get('battery') as string : selectedVehicle.batteryLevel.toString();
+    const battery = Number(batteryValue === '' ? selectedVehicle.batteryLevel : batteryValue);
 
     if (!advisor) {
         toast({ variant: 'destructive', title: 'Error', description: 'Co-Pilot is required to start a drive.' });
-        setIsLoading(false);
         return;
     }
 
     if (userRole === 'manager' && batteryValue === '') {
         toast({ variant: 'destructive', title: 'Error', description: 'Current Battery Level is required.' });
-        setIsLoading(false);
         return;
     }
 
-    const action = async () => {
-        setIsOpen(false);
-        try {
-            const batch = writeBatch(firestore);
-            const driveLogRef = doc(firestore, `stores/${storeCode}/demo_drives/${driveLog.id}`);
-            const vehicleRef = doc(firestore, `stores/${storeCode}/vehicles/${selectedVehicle.id}`);
-    
-            batch.update(driveLogRef, { 
-                coPilot: advisor,
-                purpose: 'Demo',
-                startTime: serverTimestamp(),
-                startBattery: Number(batteryValue),
-            });
-            
-            batch.update(vehicleRef, {
-                status: 'On Demo',
-                currentDriveId: driveLog.id,
-                driveStartedAt: Date.now(),
-                expectedDuration: driveLog.expectedDuration,
-                batteryLevel: Number(batteryValue),
-            });
-            
-            await batch.commit();
-            toast({ title: 'Success', description: 'Scheduled drive started!' });
+    if (isBatteryBlocked(battery)) {
+        toast({
+          variant: 'destructive',
+          title: 'Battery too low',
+          description: `Charge to at least ${BATTERY_BLOCK_PERCENT}% before starting a demo.`,
+        });
+        return;
+    }
 
-        } catch(error) {
-            console.error("Scheduled drive start error:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to start scheduled drive.' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    if (!canStartScheduledDrive(driveLog.startTime)) {
+        const tooEarly = isScheduledDriveTooEarly(driveLog.startTime);
+        toast({
+          variant: 'destructive',
+          title: tooEarly ? 'Too early to start' : 'Start window closed',
+          description: tooEarly
+            ? `You can start this drive ${SCHEDULE_EARLY_START_MINUTES} minutes before the scheduled time.`
+            : 'This scheduled start window has passed. Reschedule or cancel the booking.',
+        });
+        return;
+    }
 
-    action();
-  }
+    setIsLoading(true);
+    setIsOpen(false);
+    try {
+        const batch = writeBatch(firestore);
+        const driveLogRef = doc(firestore, `stores/${storeCode}/demo_drives/${driveLog.id}`);
+        const vehicleRef = doc(firestore, `stores/${storeCode}/vehicles/${selectedVehicle.id}`);
 
-  const handleCheckout = async (formData: FormData, bypassBatteryCheck = false) => {
+        batch.update(driveLogRef, {
+            coPilot: advisor,
+            purpose: 'Demo',
+            startTime: serverTimestamp(),
+            startBattery: battery,
+        });
+
+        batch.update(vehicleRef, {
+            status: 'On Demo',
+            currentDriveId: driveLog.id,
+            driveStartedAt: Date.now(),
+            expectedDuration: driveLog.expectedDuration,
+            batteryLevel: battery,
+        });
+
+        await batch.commit();
+        toast({ title: 'Success', description: 'Scheduled drive started!' });
+    } catch (error) {
+        console.error('Scheduled drive start error:', error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to start scheduled drive.' });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  const handleCheckout = async (formData: FormData) => {
     if (!firestore || !selectedVehicle) return;
   
     const advisor = resolveAdvisorName(advisors, coPilot);
@@ -329,17 +347,31 @@ export default function CheckoutSheet({
         toast({ variant: 'destructive', title: 'Error', description: 'Battery Level is required.' });
         return;
     }
-    const battery = parseInt(batteryValue);
-    
-    // Low battery check
-    if (currentPurpose === 'Demo' && battery < 15 && !isScheduled && !bypassBatteryCheck) {
-        if (userRole === 'manager') {
-            setCheckoutFormData(formData);
-            setShowLowBatteryWarning(true);
-        } else {
-            toast({ variant: 'destructive', title: 'Error', description: 'Battery level must be at least 15% for a demo drive.' });
-        }
+    const battery = parseInt(batteryValue, 10);
+
+    // Hard block Demo/Other below 15%. Charging always allowed. No role bypass.
+    if (!isScheduled && currentPurpose !== 'Charging' && isBatteryBlocked(battery)) {
+        toast({
+          variant: 'destructive',
+          title: 'Battery too low',
+          description: `Battery must be at least ${BATTERY_BLOCK_PERCENT}% to check out for a demo. Use Charge instead.`,
+        });
         return;
+    }
+
+    // Block Demo walk-in only when a booking is inside the 15-min reserve window
+    if (!isScheduled && currentPurpose === 'Demo') {
+      const openBooking = scheduledDrives.find(
+        (log) => log.vehicleId === selectedVehicle.id && !log.endTime && log.purpose === 'Scheduled',
+      );
+      if (openBooking && isWithinScheduleReserveWindow(openBooking.startTime)) {
+        toast({
+          variant: 'destructive',
+          title: 'Reserved for upcoming drive',
+          description: `This vehicle is held for a booking starting within ${SCHEDULE_EARLY_START_MINUTES} minutes. Start that drive from Schedule.`,
+        });
+        return;
+      }
     }
     
     setIsLoading(true);
@@ -453,7 +485,7 @@ export default function CheckoutSheet({
     }
   };
   
-  const isDemoDisabled = (selectedVehicle && selectedVehicle.batteryLevel < 15 && userRole === 'advisor');
+  const isDemoDisabled = !!(selectedVehicle && isBatteryBlocked(selectedVehicle.batteryLevel));
   const isCheckoutNowDisabled = selectedVehicle?.status === 'On Demo' && !isScheduledDriveStart;
   const needsAttention = selectedVehicle?.status === 'Needs Attention';
 
@@ -474,13 +506,6 @@ export default function CheckoutSheet({
         handleCheckout(formData);
     }
   }
-
-  const handleLowBatteryConfirm = () => {
-    if (checkoutFormData) {
-        handleCheckout(checkoutFormData, true);
-    }
-    setShowLowBatteryWarning(false);
-  };
 
   const headerIcon = isScheduledDriveStart ? PlayCircle : isScheduled ? CalendarIcon : Car;
   const headerAccent = isScheduled && !isScheduledDriveStart ? 'bg-sky-600' : 'bg-primary';
@@ -791,28 +816,6 @@ export default function CheckoutSheet({
         </form>
       </DriveFlowSheetContent>
     </Sheet>
-    
-    <AlertDialog open={showLowBatteryWarning} onOpenChange={setShowLowBatteryWarning}>
-      <AlertDialogContent className="rounded-2xl border border-amber-500/30 sm:max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-3 text-lg">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-600">
-              <Battery className="h-5 w-5 text-white" aria-hidden />
-            </div>
-            Low battery warning
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-sm leading-relaxed pt-1">
-            Battery is below 15% — the recommended minimum for demo drives. Proceed anyway?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2 sm:gap-3">
-          <AlertDialogCancel className="rounded-xl h-11">Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleLowBatteryConfirm} className="rounded-xl bg-amber-600 hover:bg-amber-700 h-11">
-            Proceed anyway
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
     </>
   );
 }

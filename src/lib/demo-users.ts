@@ -33,12 +33,21 @@ export function isDemoRandomAdvisor(
   return DEMO_RANDOM_ADVISOR_PROFILES.some((profile) => profile.email === email);
 }
 
-/** Portfolio demo guests cannot elevate to manager; Marco and other advisors can. */
+/**
+ * Show Manager Access in nav for every advisor session.
+ * Elevation still goes through ManagerAuthDialog.
+ * Advisors with role manager/moderator are noted for walkthroughs (e.g. Marco).
+ */
 export function canRequestManagerAccess(
-  advisor: Pick<Advisor, 'name' | 'email'> | null | undefined
+  advisor: Pick<Advisor, 'name' | 'email' | 'role'> | null | undefined
 ): boolean {
-  if (!advisor) return true;
-  return !isDemoRandomAdvisor(advisor);
+  void advisor;
+  return true;
+}
+
+/** Elevated session: manager or moderator view. */
+export function isElevatedUserRole(role: string | null | undefined): boolean {
+  return role === 'manager' || role === 'moderator';
 }
 
 export function pickRandomDemoAdvisor(advisors: Advisor[]): Advisor | null {

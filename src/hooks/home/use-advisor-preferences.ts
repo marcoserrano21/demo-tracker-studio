@@ -22,8 +22,9 @@ export function useAdvisorPreferences(advisor: Advisor | null) {
     const isDemoVisit = getSessionItem(DDHUB_KEYS.demoMode) === 'true';
     if (!currentTab && isDemoVisit) {
       router.replace('/?tab=fleet', { scroll: false });
-    } else if (!currentTab && advisor.defaultTab) {
-      router.replace(`/?tab=${advisor.defaultTab}`, { scroll: false });
+    } else if (!currentTab) {
+      const landing = advisor.defaultTab || 'fleet';
+      router.replace(`/?tab=${landing}`, { scroll: false });
     }
   }, [advisor, router, searchParams, setTheme]);
 }

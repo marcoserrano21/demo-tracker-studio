@@ -1,0 +1,156 @@
+    .controls button:hover { border-color: #666; }
+    .counter {
+      position: fixed;
+      bottom: 28px;
+      left: 28px;
+      font-size: 0.85rem;
+      color: #555;
+      z-index: 10;
+    }
+    @media (max-width: 768px) {
+      .slide { padding: 40px 28px; }
+    }
+    @media print {
+      .slide { display: flex !important; position: relative; page-break-after: always; height: 100vh; }
+      .controls, .counter { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck">
+    <section class="slide active">
+      <p class="kicker">Portfolio case study · Marco Serrano</p>
+      <h1>Demo Drive Hub</h1>
+      <p>Real-time demo fleet ops for EV retail showrooms.</p>
+      <p>Built on the sales floor. Shipped in ~5–6 weeks.</p>
+      <p class="disclaimer">Independent portfolio project. Not affiliated with or endorsed by Tesla, Inc. or any automotive manufacturer.</p>
+      <p class="muted" style="margin-top:24px">Press → or swipe to advance</p>
+    </section>
+    <section class="slide">
+      <p class="kicker">The hook</p>
+      <div class="big-stat">25 min</div>
+      <h2>That is how long one availability check took.</h2>
+      <p>Customer waiting. Whiteboard in the back. Group chat blowing up.</p>
+      <p>That Saturday rush is where this project started.</p>
+    </section>
+    <section class="slide">
+      <p class="kicker">The leak</p>
+      <div class="big-stat">57 min</div>
+      <h2>Real average demo time. We assumed 30.</h2>
+      <p>That 27-minute gap explained double-bookings, long waits, and stressed advisors on weekend lunch rush.</p>
+      <p>You cannot fix a leak you never measured.</p>
+    </section>
+    <section class="slide">
+      <p class="kicker">What I built</p>
+      <h2>A mobile-first PWA for the showroom floor</h2>
+      <ul>
+        <li>Live fleet dashboard with 4 view modes</li>
+        <li>Check-in/out in under 30 seconds</li>
+        <li>Demo-to-sale + FSD attach tracking</li>
+        <li>Keyword maintenance flagging (no paid AI)</li>
+        <li>50 achievements, 99-level XP, chart builder export</li>
+        <li>Fleet attention strip + optional live telemetry</li>
+      </ul>
+      <p class="muted" style="margin-top:20px">Next.js 16 · React 19 · Firebase · PWA · Vercel</p>
+    </section>
+    <section class="slide">
+      <p class="kicker">Pilot results</p>
+      <h2>Numbers from a live floor test</h2>
+      <table>
+        <tr><th>Metric</th><th>Result</th></tr>
+        <tr><td>Admin time saved</td><td>~50%</td></tr>
+        <tr><td>Drives logged</td><td>147 in ~1.5 months</td></tr>
+        <tr><td>Advisors onboarded</td><td>12 in 2 weeks</td></tr>
+        <tr><td>Double-bookings</td><td>0 after launch</td></tr>
+        <tr><td>Issues flagged</td><td>8 via keywords</td></tr>
+      </table>
+    </section>
+    <section class="slide">
+      <p class="kicker">Before / after</p>
+      <table>
+        <tr><th>Before</th><th>After</th></tr>
+        <tr><td>Whiteboard tracking</td><td>Real-time dashboard</td></tr>
+        <tr><td>5+ min per demo</td><td>Under 30 seconds</td></tr>
+        <tr><td>No analytics</td><td>Conversion + FSD + charts</td></tr>
+        <tr><td>Double-bookings</td><td>Zero</td></tr>
+        <tr><td>Lost data</td><td>Searchable history + CSV</td></tr>
+      </table>
+    </section>
+    <section class="slide">
+      <p class="kicker">From the floor</p>
+      <blockquote>
+        "Before this tool, I had to run to the office to check the whiteboard. Now I just check my phone while walking the guest to the car. It makes me look more professional."
+        <cite>Senior Sales Advisor · pilot user feedback</cite>
+      </blockquote>
+    </section>
+    <section class="slide">
+      <p class="kicker">Lesson 1</p>
+      <h2>Speed wins on the sales floor</h2>
+      <p>Advisors do not hate new tools. They hate slow ones.</p>
+      <p>Once fleet status was one tap and check-in took 30 seconds, usage climbed fast.</p>
+    </section>
+    <section class="slide">
+      <p class="kicker">Lesson 2</p>
+      <h2>Adoption is part of the product</h2>
+      <p>The pilot worked. Advisors used it. Drives got logged.</p>
+      <p>Without org sponsorship, adoption plateaued. I turned the build into a portfolio showcase instead of rewriting the ending.</p>
+    </section>
+    <section class="slide">
+      <p class="kicker">Lesson 3</p>
+      <h2>Data ends arguments</h2>
+      <p>Structured logs surfaced weekend peaks, real drive duration, top performers, and maintenance issues before the next customer sat down.</p>
+      <p>Clean data is how you stop guessing.</p>
+    </section>
+    <section class="slide">
+      <p class="kicker">Portfolio build · July 2026</p>
+      <h2>What ships for public demo today</h2>
+      <ul>
+        <li>Try Demo Store with auto-seeded fleet</li>
+        <li>/about case study + Notion deep dive</li>
+        <li>FSD Orders tab and take-rate analytics</li>
+        <li>Fleet telemetry adapter (when API creds are set)</li>
+        <li>PWA install, offline fallback, app shortcuts</li>
+      </ul>
+    </section>
+    <section class="slide">
+      <p class="kicker">Try it</p>
+      <h2>See the build</h2>
+      <div class="links">
+        <a href="https://demo-tracker-studio.vercel.app/" id="live-demo" target="_blank" rel="noopener">Live demo</a>
+        <a href="https://player.vimeo.com/video/1165516041" target="_blank" rel="noopener">Walkthrough</a>
+        <a href="https://app.notion.com/p/The-Demo-Drive-Hub-28dc2787689780abbd0dda2d88ff91c4" target="_blank" rel="noopener">Notion case study</a>
+        <a href="https://marco-serrano.netlify.app" target="_blank" rel="noopener">Portfolio</a>
+        <a href="https://www.linkedin.com/in/marco-serrano25/" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </section>
+  </div>
+  <div class="counter" id="counter">1 / 12</div>
+  <div class="controls">
+    <button type="button" id="prev">← Prev</button>
+    <button type="button" id="next">Next →</button>
+  </div>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    let i = 0;
+    const counter = document.getElementById('counter');
+    function show(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+      counter.textContent = `${i + 1} / ${slides.length}`;
+    }
+    document.getElementById('prev').onclick = () => show(i - 1);
+    document.getElementById('next').onclick = () => show(i + 1);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(i + 1); }
+      if (e.key === 'ArrowLeft') show(i - 1);
+    });
+    let touchX = 0;
+    document.addEventListener('touchstart', (e) => { touchX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].screenX - touchX;
+      if (dx < -40) show(i + 1);
+      if (dx > 40) show(i - 1);
+    });
+  </script>
+</body>
+</html>

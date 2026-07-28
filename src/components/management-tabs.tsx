@@ -68,6 +68,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { StoreOperationsSettings } from './management/store-operations-settings';
 import { FsdOrdersTab } from './management/fsd-orders-tab';
 import { TelemetrySyncButton } from './management/telemetry-sync-button';
+import { DemoOutcomesTab } from './management/demo-outcomes-tab';
 
 
 const AwardsTab = lazy(() => import('./awards-tab'));
@@ -777,6 +778,7 @@ export default function ManagementTabs({
     { value: 'advisors', label: 'Advisors' },
     ...((isManager || isModerator) ? [{ value: 'goals', label: 'Goals' }] : []),
     { value: 'fsd', label: 'FSD Orders' },
+    { value: 'outcomes', label: 'Outcomes' },
     { value: 'issues', label: 'Issues' },
     { value: 'operations', label: 'Store' },
     ...(isSuperAdmin ? [{ value: 'awards', label: 'Awards' }] : []),
@@ -1292,6 +1294,9 @@ export default function ManagementTabs({
               fsdOrders={fsdOrders}
               currentAdvisorName={currentAdvisor.name}
             />
+          </TabsContent>
+          <TabsContent value="outcomes" className="mt-6">
+            <DemoOutcomesTab storeCode={storeCode} />
           </TabsContent>
           <TabsContent value="issues" className="mt-6">
                <Card className="border-border/40">

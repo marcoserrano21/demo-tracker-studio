@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import type { Advisor, DefaultTab, FontSizePreference, ThemePreference, SortKey, FleetView, CardHoverEffect, ButtonHoverEffect } from '@/lib/types';
+import type { Advisor, DefaultTab, FontSizePreference, ThemePreference, SortKey, FleetView, CardHoverEffect, ButtonHoverEffect, UserRole } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
@@ -30,12 +30,15 @@ import { Switch } from './ui/switch';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { applyReduceMotion } from '@/lib/motion-preference';
+import { isElevatedUserRole } from '@/lib/demo-users';
+import { MorningBriefLandingSetting } from './morning-brief-landing-setting';
 
 
 interface SettingsPageProps {
   advisor: Advisor;
   storeCode: string;
   advisors: Advisor[];
+  userRole?: UserRole;
 }
 
 const OVERDUE_PALETTE = [
@@ -43,7 +46,7 @@ const OVERDUE_PALETTE = [
   '#e9d8a6', '#ee9b00', '#ca6702', '#bb3e03', '#ae2012', '#9b2226'
 ];
 
-export default function SettingsPage({ advisor, storeCode, advisors }: SettingsPageProps) {
+export default function SettingsPage({ advisor, storeCode, advisors, userRole }: SettingsPageProps) {
   const { setTheme } = useTheme();
   const { toast } = useToast();
   const [isAvatarDialogOpen, setAvatarDialogOpen] = useState(false);
@@ -95,7 +98,7 @@ export default function SettingsPage({ advisor, storeCode, advisors }: SettingsP
       updateDocumentNonBlocking(advisorRef, {
         themePreference: 'dark',
         fontSize: 'base',
-        defaultTab: 'my-hub',
+        defaultTab: 'fleet',
         fleetView: 'grid',
         compactHistoryView: false,
         defaultSortOrder: 'model',
@@ -144,6 +147,20 @@ export default function SettingsPage({ advisor, storeCode, advisors }: SettingsP
           </CardContent>
         </Card>
 
+        {isElevatedUserRole(userRole) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Manager preferences</CardTitle>
+              <CardDescription>
+                Store-level options visible after Manager Access. Affects all elevated sessions in this store.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MorningBriefLandingSetting storeCode={storeCode} />
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
             <CardHeader>
                 <CardTitle>Interface Preferences</CardTitle>
@@ -153,16 +170,17 @@ export default function SettingsPage({ advisor, storeCode, advisors }: SettingsP
                 <div className="space-y-2">
                     <Label htmlFor="default-tab">Default Landing Page</Label>
                      <Select 
-                        value={advisor.defaultTab || 'my-hub'}
+                        value={advisor.defaultTab || 'fleet'}
                         onValueChange={(value: DefaultTab) => handlePreferenceChange('defaultTab', value)}
                      >
                         <SelectTrigger id="default-tab" className="w-full md:w-1/2">
                             <SelectValue placeholder="Select a default tab" />
                         </SelectTrigger>
                         <SelectContent>
+                            <SelectItem value="fleet">Find (Floor Mode)</SelectItem>
+                            <SelectItem value="schedule">Start (Schedule)</SelectItem>
+                            <SelectItem value="finish">Finish</SelectItem>
                             <SelectItem value="my-hub">My Hub</SelectItem>
-                            <SelectItem value="fleet">Fleet</SelectItem>
-                            <SelectItem value="schedule">Schedule</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

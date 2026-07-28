@@ -26,7 +26,7 @@ export function DemoBanner() {
         <p className="flex min-w-0 items-center gap-2 text-xs sm:text-sm text-foreground">
           <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden />
           <span className="truncate">
-            Portfolio demo — explore the live app or{' '}
+            Portfolio demo — Find → Start → Finish, or{' '}
             <Link href="/about" className="font-medium text-primary underline underline-offset-4">
               read the case study
             </Link>

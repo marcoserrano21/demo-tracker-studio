@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 interface HubLogoProps {
   expanded?: boolean;
   className?: string;
+  /** Show product subtitle under the brand name when expanded */
+  showSubtitle?: boolean;
 }
 
 /** Bold Demo Drive Hub mark — filled shapes for small-size legibility. */
@@ -36,7 +38,9 @@ function HubMark({ className }: { className?: string }) {
   );
 }
 
-export function HubLogo({ expanded = false, className }: HubLogoProps) {
+export const PRODUCT_SUBTITLE = 'Showroom demo fleet OS';
+
+export function HubLogo({ expanded = false, className, showSubtitle = false }: HubLogoProps) {
   return (
     <div
       className={cn(
@@ -44,7 +48,7 @@ export function HubLogo({ expanded = false, className }: HubLogoProps) {
         expanded ? 'gap-2 px-1' : 'gap-0 justify-center',
         className
       )}
-      aria-label="Demo Drive Hub"
+      aria-label={`Demo Drive Hub — ${PRODUCT_SUBTITLE}`}
     >
       <div
         className={cn(
@@ -55,19 +59,26 @@ export function HubLogo({ expanded = false, className }: HubLogoProps) {
       >
         <HubMark className="h-5 w-5" />
       </div>
-      <span
+      <div
         className={cn(
-          'text-sm font-semibold leading-tight tracking-tight whitespace-nowrap overflow-hidden',
+          'flex flex-col overflow-hidden',
           'transition-[max-width,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           'motion-reduce:transition-none',
           expanded
-            ? 'max-w-[10rem] translate-x-0 opacity-100'
+            ? 'max-w-[14rem] translate-x-0 opacity-100'
             : 'pointer-events-none max-w-0 -translate-x-1.5 opacity-0'
         )}
         aria-hidden={!expanded}
       >
-        Demo Drive Hub
-      </span>
+        <span className="text-sm font-semibold leading-tight tracking-tight whitespace-nowrap">
+          Demo Drive Hub
+        </span>
+        {showSubtitle && (
+          <span className="text-[10px] font-medium leading-tight text-muted-foreground whitespace-nowrap">
+            {PRODUCT_SUBTITLE}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

@@ -23,6 +23,12 @@ import { doc } from 'firebase/firestore';
 import { Table, TableBody, TableHeader, TableRow, TableHead } from './ui/table';
 import VehicleCarousel from './vehicle-carousel';
 import { FleetAttentionStrip } from './fleet-attention-strip';
+import { OverdueNudgeBanner } from './overdue-nudge-banner';
+import { LowBatteryQueue } from './low-battery-queue';
+import { isOverdueVehicle } from '@/lib/overdue';
+import { EmptyState } from './empty-state';
+import CheckoutSheet from './checkout-sheet';
+import { Car } from 'lucide-react';
 
 interface VehicleGridProps {
   vehicles: Vehicle[];
@@ -35,6 +41,7 @@ interface VehicleGridProps {
   storeName: string;
   advisorName: string;
   isMobile: boolean | undefined;
+  onNavigateTab?: (tab: string) => void;
 }
 
 const modelOrder: VehicleModel[] = ['Model S', 'Model 3', 'Model X', 'Model Y', 'Cybertruck', 'Roadster'];
@@ -51,7 +58,7 @@ const trimOrder: Record<VehicleModel, string[]> = {
     'Roadster': ["Founder's Series"],
 };
 
-export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeCode, userRole, driveLogs, onVehicleUpdate, storeName, advisorName, isMobile }: VehicleGridProps) {
+export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeCode, userRole, driveLogs, onVehicleUpdate, storeName, advisorName, isMobile, onNavigateTab }: VehicleGridProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'All'>('All');
     const [sortKey, setSortKey] = useState<SortKey>(currentAdvisor.defaultSortOrder || 'model');
@@ -62,6 +69,7 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     const [interiorColorFilter, setInteriorColorFilter] = useState<string>('all');
     const [wheelFilter, setWheelFilter] = useState<string>('all');
     const [attentionFilter, setAttentionFilter] = useState<AttentionFilter>(null);
+    const [chargeVehicle, setChargeVehicle] = useState<Vehicle | null>(null);
     
     const { firestore } = useFirebase();
 
@@ -157,7 +165,7 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                 if (attentionFilter === 'low-battery') {
                     attentionMatch = vehicle.batteryLevel < 30;
                 } else if (attentionFilter === 'overdue') {
-                    attentionMatch = !!vehicle.overdue && vehicle.status === 'On Demo';
+                    attentionMatch = isOverdueVehicle(vehicle);
                 } else if (attentionFilter === 'Needs Attention') {
                     attentionMatch = vehicle.status === 'Needs Attention';
                 }
@@ -185,6 +193,20 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
         }
 
         return filtered.sort((a, b) => {
+                // Floor habit: Available first unless sorting purely by battery/popularity/date
+                if (sortKey === 'model') {
+                    const statusOrder: Record<string, number> = {
+                        Available: 0,
+                        Scheduled: 1,
+                        'On Demo': 2,
+                        Charging: 3,
+                        'Needs Attention': 4,
+                        Sold: 5,
+                    };
+                    const sa = statusOrder[a.status] ?? 99;
+                    const sb = statusOrder[b.status] ?? 99;
+                    if (sa !== sb) return sa - sb;
+                }
                 switch(sortKey) {
                     case 'battery-desc':
                         return b.batteryLevel - a.batteryLevel;
@@ -267,36 +289,16 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     const renderContent = () => {
         if (sortedAndFilteredVehicles.length === 0) {
             return (
-                <div className="col-span-full flex items-center justify-center py-16 text-center">
-                    <div className="max-w-md mx-auto">
-                        {/* Engaging illustration */}
-                        <div className="relative mx-auto w-24 h-24 mb-6">
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-500/20 rounded-full blur-xl animate-pulse" />
-                            <div className="relative w-full h-full bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center">
-                                <Search className="h-10 w-10 text-primary/60" />
-                            </div>
-                        </div>
-                        
-                        {/* Better hierarchy and actionable content */}
-                        <h3 className="text-xl font-semibold mb-3">No Vehicles Match Your Search</h3>
-                        <p className="text-muted-foreground leading-relaxed mb-6">
-                            Try adjusting your filters or search terms to find the vehicles you're looking for.
-                        </p>
-                        
-                        {/* Actionable suggestions */}
-                        <div className="space-y-2">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full text-xs font-medium text-muted-foreground">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                                Clear filters to see all vehicles
-                            </div>
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full text-xs font-medium text-muted-foreground">
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                                Try searching by VIN or model name
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )
+                <EmptyState
+                    icon={Search}
+                    title="No vehicles match your search"
+                    description="Try adjusting filters or search terms. Clear filters to see the full floor, or search by VIN or model."
+                    action={{
+                        label: 'Clear filters',
+                        onClick: resetFilters,
+                    }}
+                />
+            );
         }
         
         switch (fleetView) {
@@ -313,15 +315,35 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
         <div className="space-y-6">
             <div className="space-y-2 mb-6">
                  <div className="flex flex-col">
-                    <div className="text-3xl font-bold tracking-tight">Welcome back, {advisorName}</div>
-                    <div className="text-muted-foreground">Here is the current status of your vehicle fleet for {storeName}.</div>
+                    <div className="text-3xl font-bold tracking-tight">Find · {advisorName}</div>
+                    <div className="text-muted-foreground">Floor availability for {storeName}. Available first — Start a demo in one tap.</div>
                 </div>
             </div>
+            <OverdueNudgeBanner
+              vehicles={vehicles}
+              onGoFinish={onNavigateTab ? () => onNavigateTab('finish') : undefined}
+            />
+            <LowBatteryQueue vehicles={vehicles} onCharge={(v) => setChargeVehicle(v)} />
             <FleetAttentionStrip
               vehicles={vehicles}
               activeFilter={attentionFilter}
               onFilterStatus={handleAttentionFilter}
             />
+            {chargeVehicle && (
+              <CheckoutSheet
+                isOpen={!!chargeVehicle}
+                setIsOpen={(open) => { if (!open) setChargeVehicle(null); }}
+                vehicle={chargeVehicle}
+                vehicles={vehicles}
+                advisors={advisors}
+                currentAdvisor={currentAdvisor}
+                storeCode={storeCode}
+                userRole={userRole}
+                scheduledDrives={scheduledDemos}
+                onVehicleUpdate={onVehicleUpdate}
+                initialPurpose="Charging"
+              />
+            )}
             <div className="flex flex-col md:flex-row gap-4 justify-between">
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                     <div className="relative w-full sm:w-auto md:flex-1 md:max-w-xs">

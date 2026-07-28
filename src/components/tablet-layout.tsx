@@ -15,6 +15,8 @@ import type { DashboardLayoutProps } from './dashboard/dashboard-shell-types';
 import { useDashboardShell } from '@/hooks/dashboard/use-dashboard-shell';
 import { PRIMARY_MOBILE_TAB_ICONS, getSecondaryMobileTabIcons } from '@/lib/dashboard-tabs';
 import { canRequestManagerAccess } from '@/lib/demo-users';
+import { useFirebase } from '@/firebase';
+import { getStoreSettingsClient } from '@/lib/store-settings-client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,9 +44,10 @@ export default function TabletLayout(props: DashboardLayoutProps) {
   } = props;
 
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') || advisor.defaultTab || 'my-hub';
+  const initialTab = searchParams.get('tab') || advisor.defaultTab || 'fleet';
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction | null>(null);
+  const { firestore } = useFirebase();
 
   const shell = useDashboardShell({
     storeCode: store.code,
@@ -59,6 +62,20 @@ export default function TabletLayout(props: DashboardLayoutProps) {
   if (!secondaryTabs.some((tab) => tab.value === 'settings')) {
     secondaryTabs.push({ value: 'settings', label: 'Settings', icon: 'Settings' });
   }
+
+  const handleManagerLoginSuccess = () => {
+    const nextRole =
+      advisor.role === 'moderator' || advisor.role === 'manager' ? advisor.role : 'manager';
+    setUserRole(nextRole);
+    setAuthDialogOpen(false);
+    if (firestore) {
+      void getStoreSettingsClient(firestore, store.code).then((settings) => {
+        if (settings.landOnMorningBrief) {
+          shell.handleTabChange('analytics');
+        }
+      });
+    }
+  };
 
   const handleConfirmation = () => {
     if (!confirmationAction) return;
@@ -76,6 +93,7 @@ export default function TabletLayout(props: DashboardLayoutProps) {
         onStoreChange={() => setConfirmationAction('changeStore')}
         storeCode={store.code}
         currentAdvisor={advisor}
+        onManagerLoginSuccess={handleManagerLoginSuccess}
       >
         <HamburgerMenu
           primaryTabs={PRIMARY_MOBILE_TAB_ICONS}
@@ -109,6 +127,7 @@ export default function TabletLayout(props: DashboardLayoutProps) {
               scheduledDemos={shell.scheduledDemos}
               vehicleIssues={shell.vehicleIssues}
               onLogUpdate={shell.handleLogUpdate}
+              onNavigateTab={shell.handleTabChange}
               isMobile
             />
           </Tabs>
@@ -117,7 +136,7 @@ export default function TabletLayout(props: DashboardLayoutProps) {
       <ManagerAuthDialog
         isOpen={isAuthDialogOpen}
         setIsOpen={setAuthDialogOpen}
-        onSuccess={() => setUserRole('manager')}
+        onSuccess={handleManagerLoginSuccess}
         storeCode={store.code}
         currentAdvisor={advisor}
       />

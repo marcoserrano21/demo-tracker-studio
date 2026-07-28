@@ -44,11 +44,15 @@ export interface Vehicle {
   locationUpdatedAt?: Timestamp | number;
   batterySource?: BatterySource;
   telemetrySyncedAt?: Timestamp | number;
+  /** Last known FSD/autopilot engaged flag from Fleet API sync (best-effort). */
+  fsdActiveTelemetry?: boolean;
 }
 
 export type ThemePreference = 'system' | 'light' | 'dark' | 'high-contrast';
 export type FontSizePreference = 'sm' | 'base' | 'lg';
-export type DefaultTab = 'my-hub' | 'fleet' | 'schedule';
+export type DefaultTab = 'my-hub' | 'fleet' | 'schedule' | 'finish' | 'analytics';
+export type FsdSubscriptionAnswer = 'Y' | 'N' | 'NA';
+export type YnAnswer = 'Y' | 'N';
 
 export interface Advisor {
   id: string;
@@ -75,6 +79,8 @@ export interface Advisor {
 export interface StoreSettings {
   autoCheckInEnabled: boolean;
   autoCheckInThresholdMinutes: number;
+  /** After Manager Access, land on Analytics Morning Brief. Managers/Moderators only. */
+  landOnMorningBrief?: boolean;
   updatedAt?: Timestamp;
   updatedBy?: string;
 }
@@ -82,6 +88,7 @@ export interface StoreSettings {
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   autoCheckInEnabled: false,
   autoCheckInThresholdMinutes: 30,
+  landOnMorningBrief: false,
 };
 
 export interface StoreInfo {
@@ -122,8 +129,34 @@ export interface DriveLog {
   customerPurchased?: boolean;
   purchaseModel?: string;
   purchaseTrim?: string;
+  /** Demo finished via check-in (always true when a demo is ended). */
+  demoCompleted?: boolean;
+  /** FSD (Supervised) was activated during the demo (advisor or Fleet API). */
+  fsdActivated?: boolean;
+  /** Source of FSD activation signal. */
+  fsdActivatedSource?: 'advisor' | 'fleet_api';
   /** FSD Monthly Subscription attached (check-in keywords or explicit). */
   fsdSubscribed?: boolean;
+  /** FSD subscription attached to order: Y / N / NA. */
+  fsdSubscriptionAttached?: FsdSubscriptionAnswer;
+}
+
+/** Lightweight CRM outcome — no PII; soft labels only. */
+export interface DemoOutcomeRecord {
+  id: string;
+  storeId: string;
+  driveLogId: string;
+  vehicleModel: string;
+  vehicleTrim: string;
+  vehicleVinLast6: string;
+  advisorName: string;
+  customerPurchased: boolean;
+  fsdSubscribed: boolean;
+  fsdActivated: boolean;
+  /** Soft ops label e.g. "Demo · Model Y ···1002" — never real customer PII */
+  outcomeLabel: string;
+  createdAt: Timestamp | number | Date;
+  createdBy: string;
 }
 
 export interface FsdOrderRecord {
@@ -182,6 +215,12 @@ export interface ManualAward {
     awardedAt: any;
 }
 
+export interface AuditLogChange {
+  field: string;
+  previous: unknown;
+  next: unknown;
+}
+
 export interface AuditLog {
   id: string;
   storeId: string;
@@ -190,7 +229,9 @@ export interface AuditLog {
   timestamp: any;
   details: {
     targetId: string;
-    targetType: 'DriveLog' | 'VehicleIssue' | 'Advisor' | 'Vehicle';
+    targetType: 'DriveLog' | 'VehicleIssue' | 'Advisor' | 'Vehicle' | 'DemoOutcome';
     description: string;
+    /** Field-level before/after for history edits (especially Sales Outcome). */
+    changes?: AuditLogChange[];
   };
 }
