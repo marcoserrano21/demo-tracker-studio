@@ -6,17 +6,19 @@ import type { Vehicle, Advisor, UserRole, VehicleModel, DriveLog, CardHoverEffec
 import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
-import { Car, Palette, Armchair, ChevronRight, Clock, Ban, Disc, Search, CalendarDays, User, Timer, MapPin } from 'lucide-react';
+import { Car, Palette, Armchair, ChevronRight, Clock, Ban, Disc, Search, CalendarDays, User, Timer, MapPin, Wrench } from 'lucide-react';
 import BatteryIndicator from './battery-indicator';
 import StatusBadge from './status-badge';
 import CheckoutSheet from './checkout-sheet';
 import CheckinSheet from './checkin-sheet';
+import { FixAttentionDialog } from './fix-attention-dialog';
 import { formatMinutesToHoursAndMinutes } from '@/lib/utils';
 import { getVehicleImage, normalizeTrim, getSeatDisplayLabel } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getDriveStartDate, findActiveDriveLog, findUpcomingSchedule, findVehicleSchedule, isWithinScheduleReserveWindow } from '@/lib/drive-log-utils';
 import { isBatteryBlocked } from '@/lib/battery-thresholds';
+import { isElevatedUserRole } from '@/lib/demo-users';
 import { subscribeCountdownTick } from '@/lib/countdown-ticker';
 
 
@@ -70,11 +72,13 @@ const Countdown = ({ startedAt, duration, onOverdueChange }: { startedAt: number
 function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRole, scheduledDrives, driveLogs, priority = false, onVehicleUpdate, isCompact = false, isCarousel = false, showCarouselDetails = true }: VehicleCardItemProps) {
     const [isCheckoutOpen, setCheckoutOpen] = useState(false);
     const [isCheckinOpen, setCheckinOpen] = useState(false);
+    const [isFixAttentionOpen, setFixAttentionOpen] = useState(false);
     const [isOverdue, setIsOverdue] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
     const isDemoDisabled = isBatteryBlocked(vehicle.batteryLevel);
     const needsAttention = vehicle.status === 'Needs Attention';
+    const canFixAttention = needsAttention && isElevatedUserRole(userRole);
     
     const reduceMotion = currentAdvisor.reduceMotion === true;
     const cardHoverEffect = reduceMotion ? 'blur' : (currentAdvisor.cardHoverEffect || 'holographic');
@@ -128,8 +132,8 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
     }
 
     const isButtonDisabled =
-        needsAttention ||
-        (vehicle.status !== 'On Demo' && isDemoDisabled) ||
+        (needsAttention && !canFixAttention) ||
+        (vehicle.status !== 'On Demo' && !needsAttention && isDemoDisabled) ||
         isReservedSoon;
 
     useEffect(() => {
@@ -152,6 +156,19 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
         {
             'holographic-card': !reduceMotion && cardHoverEffect === 'holographic',
         }
+    );
+
+    const FixAttentionButton = () => (
+        <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className={cn("flex-1", !reduceMotion && 'glow-on-hover')}
+            onClick={() => setFixAttentionOpen(true)}
+        >
+            <Wrench className="mr-2 h-4 w-4" aria-hidden />
+            Fix attention
+        </Button>
     );
 
     const CheckoutButton = () => {
@@ -215,6 +232,11 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                                 <ChevronRight className="h-5 w-5 checkout-button-icon" />
                             </div>
                         </div>
+                    ) : canFixAttention ? (
+                        <Button className="w-full h-8" variant="destructive" size="sm" onClick={() => setFixAttentionOpen(true)}>
+                            <Wrench className="mr-2 h-4 w-4" aria-hidden />
+                            Fix attention
+                        </Button>
                     ) : canCheckout ? (
                         <div className="group checkout-button-pop w-full flex justify-end items-center gap-2 cursor-pointer" onClick={() => setCheckoutOpen(true)}>
                             <span className="text-sm font-medium">{vehicle.status === 'On Demo' ? 'Schedule' : 'Start'}</span>
@@ -253,6 +275,14 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                 userRole={userRole}
                 driveLog={currentDriveLog}
                 driveLogs={driveLogs}
+                onVehicleUpdate={onVehicleUpdate}
+            />
+            <FixAttentionDialog
+                vehicle={vehicle}
+                isOpen={isFixAttentionOpen}
+                onClose={() => setFixAttentionOpen(false)}
+                storeCode={storeCode}
+                editorName={currentAdvisor.name}
                 onVehicleUpdate={onVehicleUpdate}
             />
           </>
@@ -377,13 +407,14 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                     </div>
                 </CardContent>
                 <CardFooter className="p-2 sm:p-4 mt-auto flex flex-wrap items-center gap-2">
-                    {canCheckout && <CheckoutButton />}
+                    {canFixAttention && <FixAttentionButton />}
+                    {!needsAttention && canCheckout && <CheckoutButton />}
                     {canCheckin && (
                         <Button variant="secondary" size="sm" className={cn("flex-1", buttonHoverEffect !== 'arrow' && 'glow-on-hover secondary')} onClick={() => setCheckinOpen(true)}>
                            {vehicle.status === 'Charging' ? 'Complete Charging' : 'Finish'}
                         </Button>
                     )}
-                    {!canCheckout && !canCheckin && (
+                    {!canFixAttention && !canCheckout && !canCheckin && (
                          <Button className="w-full" disabled variant="destructive">
                             <Ban className="mr-2 h-4 w-4" />
                             {vehicle.status}
@@ -416,6 +447,14 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                 driveLogs={driveLogs}
                 onVehicleUpdate={onVehicleUpdate}
             />
+            <FixAttentionDialog
+                vehicle={vehicle}
+                isOpen={isFixAttentionOpen}
+                onClose={() => setFixAttentionOpen(false)}
+                storeCode={storeCode}
+                editorName={currentAdvisor.name}
+                onVehicleUpdate={onVehicleUpdate}
+            />
         </>
     );
 }
@@ -434,6 +473,7 @@ export default memo(VehicleCardItem, (prevProps, nextProps) => {
     prevProps.vehicle.expectedDuration === nextProps.vehicle.expectedDuration &&
     prevProps.vehicle.overdue === nextProps.vehicle.overdue &&
     prevProps.currentAdvisor.id === nextProps.currentAdvisor.id &&
+    prevProps.userRole === nextProps.userRole &&
     prevProps.isCompact === nextProps.isCompact &&
     prevProps.isCarousel === nextProps.isCarousel &&
     prevProps.showCarouselDetails === nextProps.showCarouselDetails &&

@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { regions as allRegions, stores as allStores } from '@/lib/data';
+import { regions as allRegions, loginStores as allStores } from '@/lib/data';
 import { Input } from './ui/input';
 import { verifyStoreAccess, tryDemoStoreAccess } from '@/app/auth/actions';
 import { invokeServerAction } from '@/lib/server-action-client';
@@ -128,8 +128,8 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">Get started</CardTitle>
           <CardDescription>
-            New here? One tap opens a sample store with demo advisors and vehicles.
-          </CardDescription>
+          New here? One tap opens an isolated sample store with fake advisors, vehicles, and drive history — separate from real showrooms.
+        </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <Button

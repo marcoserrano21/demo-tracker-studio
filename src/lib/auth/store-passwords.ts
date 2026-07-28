@@ -1,3 +1,11 @@
+import {
+  DEMO_STORE_CODE,
+  DEMO_STORE_NAME,
+  DEMO_REGION_CODE,
+  DEMO_STORE_PASSWORD,
+  isPortfolioDemoStore,
+} from '../demo-store';
+
 /**
  * Server-only password verification. Import only from Server Actions or Route Handlers.
  */
@@ -11,7 +19,13 @@ function parseStorePasswordsEnv(): Record<string, string> {
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as Record<string, string>;
-      if (parsed && typeof parsed === 'object') return parsed;
+      if (parsed && typeof parsed === 'object') {
+        // Always ensure portfolio demo store is present (isolated from real stores)
+        return {
+          ...parsed,
+          [DEMO_STORE_CODE]: parsed[DEMO_STORE_CODE] ?? DEMO_STORE_PASSWORD,
+        };
+      }
     } catch {
       console.error('[auth] Failed to parse STORE_PASSWORDS JSON');
     }
@@ -19,11 +33,14 @@ function parseStorePasswordsEnv(): Record<string, string> {
 
   if (isProduction()) {
     console.error('[auth] STORE_PASSWORDS is required in production');
-    return {};
+    return {
+      [DEMO_STORE_CODE]: process.env.DEMO_STORE_PASSWORD ?? DEMO_STORE_PASSWORD,
+    };
   }
 
   // Development fallback only — never used when NODE_ENV=production
   return {
+    [DEMO_STORE_CODE]: DEMO_STORE_PASSWORD,
     clermont: 'clermont2026',
     gainesville: 'gainesville2026',
     jacksonville: 'jacksonville2026',
@@ -65,7 +82,8 @@ export function verifyManagerPassword(advisorEmail: string | undefined, password
   }
 
   const resolvedDefault = defaultPassword ?? 'tesla2026';
-  const resolvedOverride = overridePassword ?? 'teslamarco2026';
+  // Portfolio demo: same manager PIN as everyone else (tesla2026) unless env override is set
+  const resolvedOverride = overridePassword ?? resolvedDefault;
 
   if (advisorEmail && advisorEmail.toLowerCase() === overrideEmail.toLowerCase()) {
     return password === resolvedOverride;
@@ -74,8 +92,13 @@ export function verifyManagerPassword(advisorEmail: string | undefined, password
 }
 
 export function getDemoStoreCredentials(): { storeCode: string; password: string } {
-  const storeCode = process.env.DEMO_STORE_CODE ?? 'clermont';
+  const storeCode = process.env.DEMO_STORE_CODE ?? DEMO_STORE_CODE;
   const passwords = getStorePasswordsMap();
-  const password = process.env.DEMO_STORE_PASSWORD ?? passwords[storeCode] ?? 'clermont2026';
+  const password =
+    process.env.DEMO_STORE_PASSWORD ??
+    passwords[storeCode] ??
+    DEMO_STORE_PASSWORD;
   return { storeCode, password };
 }
+
+export { DEMO_STORE_CODE, DEMO_STORE_NAME, isPortfolioDemoStore, DEMO_REGION_CODE };

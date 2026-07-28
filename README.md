@@ -284,7 +284,7 @@ See [`.env.example`](.env.example). Key groups:
 |---|---|
 | `STORE_PASSWORDS` | JSON map of store codes → passwords (12 Florida stores configured) |
 | `MANAGER_PASSWORD` | Default manager access |
-| `DEMO_STORE_CODE` / `DEMO_STORE_PASSWORD` | One-click demo entry (defaults to Clermont) |
+| `DEMO_STORE_CODE` / `DEMO_STORE_PASSWORD` | One-click demo entry (defaults to isolated `demo-hub`) |
 | `MANAGER_PASSWORD_OVERRIDE_EMAIL` / `MANAGER_PASSWORD_OVERRIDE` | Optional manager override |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Optional distributed auth rate limiting |
 | `TESLA_CLIENT_ID` / `TESLA_CLIENT_SECRET` / `TESLA_REFRESH_TOKEN` / `TESLA_AUDIENCE` | Optional live fleet telemetry sync |

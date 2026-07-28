@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import BatteryIndicator from './battery-indicator';
 import CheckoutSheet from './checkout-sheet';
 import CheckinSheet from './checkin-sheet';
+import { FixAttentionDialog } from './fix-attention-dialog';
 import { OverdueNudgeBanner } from './overdue-nudge-banner';
 import { LowBatteryQueue } from './low-battery-queue';
 import { EmptyState } from './empty-state';
@@ -14,8 +15,9 @@ import { getVehicleImage, normalizeTrim } from '@/lib/data';
 import { cn, formatMinutesToHoursAndMinutes } from '@/lib/utils';
 import { findActiveDriveLog, findVehicleSchedule, getDriveStartDate, isWithinScheduleReserveWindow } from '@/lib/drive-log-utils';
 import { isBatteryBlocked } from '@/lib/battery-thresholds';
+import { isElevatedUserRole } from '@/lib/demo-users';
 import { subscribeCountdownTick } from '@/lib/countdown-ticker';
-import { Ban, Play, CheckCircle2, Zap, AlertTriangle, Clock, Car } from 'lucide-react';
+import { Ban, Play, CheckCircle2, Zap, AlertTriangle, Clock, Car, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 
 const STATUS_PRIORITY: Record<VehicleStatus, number> = {
@@ -104,10 +106,12 @@ function FloorVehicleRow({
 }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkinOpen, setCheckinOpen] = useState(false);
+  const [fixAttentionOpen, setFixAttentionOpen] = useState(false);
 
   const activeLog = useMemo(() => findActiveDriveLog(vehicle, driveLogs), [vehicle, driveLogs]);
   const lowBattery = isBatteryBlocked(vehicle.batteryLevel);
   const needsAttention = vehicle.status === 'Needs Attention';
+  const canFixAttention = needsAttention && isElevatedUserRole(userRole);
 
   const openSchedule = useMemo(
     () => findVehicleSchedule(vehicle.id, scheduledDrives),
@@ -134,6 +138,9 @@ function FloorVehicleRow({
 
   const primaryAction = useMemo(() => {
     if (needsAttention) {
+      if (canFixAttention) {
+        return { label: 'Fix attention', disabled: false, kind: 'fix' as const };
+      }
       return { label: 'Needs attention', disabled: true, kind: 'blocked' as const };
     }
     if (vehicle.status === 'On Demo' || vehicle.status === 'Charging') {
@@ -157,11 +164,12 @@ function FloorVehicleRow({
       };
     }
     return { label: vehicle.status, disabled: true, kind: 'blocked' as const };
-  }, [vehicle.status, needsAttention, lowBattery, isReservedSoon]);
+  }, [vehicle.status, needsAttention, canFixAttention, lowBattery, isReservedSoon]);
 
   const onPrimary = useCallback(() => {
     if (primaryAction.disabled) return;
     if (primaryAction.kind === 'finish') setCheckinOpen(true);
+    else if (primaryAction.kind === 'fix') setFixAttentionOpen(true);
     else if (primaryAction.kind === 'start') setCheckoutOpen(true);
   }, [primaryAction]);
 
@@ -232,7 +240,15 @@ function FloorVehicleRow({
           <Button
             type="button"
             size="lg"
-            variant={primaryAction.kind === 'finish' ? 'secondary' : primaryAction.disabled ? 'destructive' : 'default'}
+            variant={
+              primaryAction.kind === 'finish'
+                ? 'secondary'
+                : primaryAction.kind === 'fix'
+                  ? 'destructive'
+                  : primaryAction.disabled
+                    ? 'destructive'
+                    : 'default'
+            }
             className="h-12 w-full rounded-xl text-base font-semibold"
             disabled={primaryAction.disabled}
             onClick={onPrimary}
@@ -241,6 +257,7 @@ function FloorVehicleRow({
               <Play className="mr-2 h-5 w-5" aria-hidden />
             )}
             {primaryAction.kind === 'finish' && <CheckCircle2 className="mr-2 h-5 w-5" aria-hidden />}
+            {primaryAction.kind === 'fix' && <Wrench className="mr-2 h-5 w-5" aria-hidden />}
             {primaryAction.disabled && primaryAction.kind === 'blocked' && (
               needsAttention ? <AlertTriangle className="mr-2 h-5 w-5" aria-hidden /> : <Ban className="mr-2 h-5 w-5" aria-hidden />
             )}
@@ -273,6 +290,14 @@ function FloorVehicleRow({
         userRole={userRole}
         driveLog={activeLog}
         driveLogs={driveLogs}
+        onVehicleUpdate={onVehicleUpdate}
+      />
+      <FixAttentionDialog
+        vehicle={vehicle}
+        isOpen={fixAttentionOpen}
+        onClose={() => setFixAttentionOpen(false)}
+        storeCode={storeCode}
+        editorName={currentAdvisor.name}
         onVehicleUpdate={onVehicleUpdate}
       />
     </>

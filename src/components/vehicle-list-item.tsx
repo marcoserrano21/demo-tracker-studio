@@ -8,6 +8,7 @@ import BatteryIndicator from './battery-indicator';
 import StatusBadge from './status-badge';
 import CheckoutSheet from './checkout-sheet';
 import CheckinSheet from './checkin-sheet';
+import { FixAttentionDialog } from './fix-attention-dialog';
 import { cn } from '@/lib/utils';
 import {
   findActiveDriveLog,
@@ -16,6 +17,8 @@ import {
   isWithinScheduleReserveWindow,
 } from '@/lib/drive-log-utils';
 import { isBatteryBlocked } from '@/lib/battery-thresholds';
+import { isElevatedUserRole } from '@/lib/demo-users';
+import { Wrench } from 'lucide-react';
 
 interface VehicleListItemProps extends React.HTMLAttributes<HTMLDivElement> {
     vehicle: Vehicle;
@@ -31,9 +34,11 @@ interface VehicleListItemProps extends React.HTMLAttributes<HTMLDivElement> {
 function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRole, scheduledDrives, driveLogs, onVehicleUpdate, className, ...props }: VehicleListItemProps) {
     const [isCheckoutOpen, setCheckoutOpen] = useState(false);
     const [isCheckinOpen, setCheckinOpen] = useState(false);
+    const [isFixAttentionOpen, setFixAttentionOpen] = useState(false);
 
     const isDemoDisabled = isBatteryBlocked(vehicle.batteryLevel);
     const needsAttention = vehicle.status === 'Needs Attention';
+    const canFixAttention = needsAttention && isElevatedUserRole(userRole);
 
     const currentDriveLog = useMemo(
         () => findActiveDriveLog(vehicle, driveLogs),
@@ -102,10 +107,15 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                               syncedAt={vehicle.telemetrySyncedAt as number | undefined}
                             />
                         </div>
-                        <div className="w-[120px] flex justify-end">
+                        <div className="w-[140px] flex justify-end">
                             {canCheckin ? (
                                 <Button variant="secondary" size="sm" onClick={() => setCheckinOpen(true)} className="w-full">
                                     {vehicle.status === 'Charging' ? 'Complete' : 'Finish'}
+                                </Button>
+                            ) : canFixAttention ? (
+                                <Button variant="destructive" size="sm" onClick={() => setFixAttentionOpen(true)} className="w-full">
+                                    <Wrench className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                                    Fix
                                 </Button>
                             ) : canCheckout ? (
                                 <Button size="sm" onClick={() => setCheckoutOpen(true)} disabled={isButtonDisabled} className="w-full">
@@ -147,6 +157,14 @@ function VehicleListItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
                 userRole={userRole}
                 driveLog={currentDriveLog}
                 driveLogs={driveLogs}
+                onVehicleUpdate={onVehicleUpdate}
+            />
+            <FixAttentionDialog
+                vehicle={vehicle}
+                isOpen={isFixAttentionOpen}
+                onClose={() => setFixAttentionOpen(false)}
+                storeCode={storeCode}
+                editorName={currentAdvisor.name}
                 onVehicleUpdate={onVehicleUpdate}
             />
         </>

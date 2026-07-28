@@ -9,7 +9,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import type { Advisor, DriveLog, FsdOrderRecord, Vehicle } from './types';
-import { getStoreData, getVehicleImage, PREMIUM_LONG_WHEELBASE_TRIM } from './data';
+import { getVehicleImage, PREMIUM_LONG_WHEELBASE_TRIM } from './data';
 import { getLevelFromXP } from './xp-system';
 import { stripUndefined } from './utils';
 import {
@@ -17,8 +17,9 @@ import {
   DEMO_RANDOM_ADVISOR_PROFILES,
   getDemoAdvisorEmail,
 } from './demo-users';
+import { DEMO_STORE_CODE } from './demo-store';
 
-export const DEMO_STORE_CODE = 'clermont';
+export { DEMO_STORE_CODE } from './demo-store';
 const MIN_DEMO_DRIVE_LOGS = 20;
 
 const DEMO_ADVISOR_NAMES = [
@@ -142,21 +143,16 @@ function getDemoVehicles(storeCode: string): Array<Vehicle & { id: string }> {
     ...v,
     storeId: storeCode,
     vin: `DEMO${(1001 + index).toString()}`,
-    licensePlate: `EV${(200 + index).toString()}CL`,
+    licensePlate: `EV${(200 + index).toString()}DM`,
     wheelSize: v.wheelSize ?? '20" Wheels',
   }));
 }
 
 function getDemoAdvisors(storeCode: string): Array<Advisor> {
-  const seed = getStoreData(storeCode);
-  const fromData = seed?.advisors ?? [];
-
   return DEMO_ADVISOR_NAMES.map((name, index) => {
-    const match = fromData.find((a) => a.name === name);
     const baseXp = [4200, 3100, 2800, 2400, 2100, 1900, 1600, 1200][index] ?? 1000;
     const xp = baseXp;
     const isManagerDemo = name === DEMO_MANAGER_ADVISOR_NAME;
-    const isRandomGuest = DEMO_RANDOM_ADVISOR_PROFILES.some((profile) => profile.name === name);
     return {
       id: `demo-advisor-${slugify(name)}`,
       storeId: storeCode,
@@ -169,7 +165,6 @@ function getDemoAdvisors(storeCode: string): Array<Advisor> {
       fleetView: 'grid',
       xp,
       level: getLevelFromXP(xp),
-      ...(match?.avatarUrl ? { avatarUrl: match.avatarUrl } : {}),
     } satisfies Advisor;
   });
 }
