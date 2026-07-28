@@ -3,7 +3,6 @@
 
 import { useState, useMemo, useEffect, useRef, memo } from 'react';
 import type { Vehicle, Advisor, UserRole, VehicleModel, DriveLog, CardHoverEffect, ButtonHoverEffect } from '@/lib/types';
-import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Car, Palette, Armchair, ChevronRight, Clock, Ban, Disc, Search, CalendarDays, User, Timer, MapPin, Wrench } from 'lucide-react';
@@ -12,6 +11,7 @@ import StatusBadge from './status-badge';
 import CheckoutSheet from './checkout-sheet';
 import CheckinSheet from './checkin-sheet';
 import { FixAttentionDialog } from './fix-attention-dialog';
+import { VehiclePhoto } from './vehicle-photo';
 import { formatMinutesToHoursAndMinutes } from '@/lib/utils';
 import { getVehicleImage, normalizeTrim, getSeatDisplayLabel } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -205,12 +205,12 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
           <>
             <Card ref={cardRef} id={`vehicle-${vehicle.id}`} className={cn(cardClasses, "flex flex-row items-center p-2 select-none")}>
                 <div className="relative h-24 w-24 flex-shrink-0 rounded-md overflow-hidden">
-                    <Image
+                    <VehiclePhoto
                         src={getVehicleImage(vehicle.model, vehicle.trim)}
                         alt={`${vehicle.model} ${vehicle.trim}`}
                         fill
-                        sizes="100px"
-                        className="object-cover"
+                        variant="compact"
+                        priority={priority}
                     />
                 </div>
                 <div className="flex-grow p-3 space-y-1">
@@ -293,12 +293,11 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
         <>
             <Card ref={cardRef} id={`vehicle-${vehicle.id}`} className={cardClasses}>
                 <CardHeader className="relative p-0 h-48 sm:h-56 w-full">
-                    <Image
+                    <VehiclePhoto
                         src={getVehicleImage(vehicle.model, vehicle.trim)}
                         alt={`${vehicle.model} ${vehicle.trim}`}
                         fill
-                        sizes={isCarousel ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"}
-                        className="object-cover"
+                        variant={isCarousel ? 'carousel' : 'card'}
                         priority={priority}
                     />
                     <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4 bg-gradient-to-t from-black/80 to-transparent">

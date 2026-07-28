@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import type { Vehicle, Advisor, UserRole, DriveLog, VehicleStatus } from '@/lib/types';
-import Image from 'next/image';
 import { Button } from './ui/button';
 import BatteryIndicator from './battery-indicator';
 import CheckoutSheet from './checkout-sheet';
@@ -11,6 +10,7 @@ import { FixAttentionDialog } from './fix-attention-dialog';
 import { OverdueNudgeBanner } from './overdue-nudge-banner';
 import { LowBatteryQueue } from './low-battery-queue';
 import { EmptyState } from './empty-state';
+import { VehiclePhoto } from './vehicle-photo';
 import { getVehicleImage, normalizeTrim } from '@/lib/data';
 import { cn, formatMinutesToHoursAndMinutes } from '@/lib/utils';
 import { findActiveDriveLog, findVehicleSchedule, getDriveStartDate, isWithinScheduleReserveWindow } from '@/lib/drive-log-utils';
@@ -184,12 +184,11 @@ function FloorVehicleRow({
       >
         <div className="flex gap-3 p-3 sm:p-4">
           <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
-            <Image
+            <VehiclePhoto
               src={getVehicleImage(vehicle.model, vehicle.trim, vehicle.imageUrl)}
               alt={`${vehicle.model} ${normalizeTrim(vehicle.trim)}`}
               fill
-              sizes="96px"
-              className="object-cover"
+              variant="thumb"
             />
           </div>
 

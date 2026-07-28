@@ -14,6 +14,7 @@ import {
 import { Separator } from './ui/separator';
 import type { Advisor, Vehicle } from '@/lib/types';
 import { getVehicleImage, normalizeTrim } from '@/lib/data';
+import { VehiclePhoto } from './vehicle-photo';
 import {
   Select,
   SelectContent,
@@ -87,12 +88,11 @@ export function DriveFlowVehicleHero({ vehicle }: { vehicle: Vehicle }) {
   return (
     <div className="relative mx-4 sm:mx-6 rounded-2xl overflow-hidden border border-border/50 bg-muted/30">
       <div className="relative aspect-[16/10] sm:aspect-[2/1] w-full">
-        <Image
+        <VehiclePhoto
           src={imageSrc}
           alt={`${vehicle.model} ${normalizeTrim(vehicle.trim)}`}
           fill
-          sizes="(max-width: 640px) 100vw, 480px"
-          className="object-cover object-center"
+          variant="hero"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />

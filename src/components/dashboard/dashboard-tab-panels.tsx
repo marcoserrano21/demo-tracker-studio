@@ -71,32 +71,19 @@ export function DashboardTabPanels({
       </TabsContent>
 
       <TabsContent className={TAB_PANEL_CLASS} value="fleet">
-        {isMobile ? (
-          <FloorMode
-            vehicles={vehicles}
-            advisors={advisors}
-            currentAdvisor={advisor}
-            storeCode={store.code}
-            userRole={userRole}
-            driveLogs={driveLogs}
-            onVehicleUpdate={onVehicleUpdate}
-            onNavigateTab={onNavigateTab}
-          />
-        ) : (
-          <VehicleGrid
-            vehicles={vehicles}
-            advisors={advisors}
-            currentAdvisor={advisor}
-            storeCode={store.code}
-            userRole={userRole}
-            driveLogs={driveLogs}
-            onVehicleUpdate={onVehicleUpdate}
-            storeName={store.name}
-            advisorName={advisor.name.split(' ')[0]}
-            isMobile={isMobile}
-            onNavigateTab={onNavigateTab}
-          />
-        )}
+        <VehicleGrid
+          vehicles={vehicles}
+          advisors={advisors}
+          currentAdvisor={advisor}
+          storeCode={store.code}
+          userRole={userRole}
+          driveLogs={driveLogs}
+          onVehicleUpdate={onVehicleUpdate}
+          storeName={store.name}
+          advisorName={advisor.name.split(' ')[0]}
+          isMobile={isMobile}
+          onNavigateTab={onNavigateTab}
+        />
       </TabsContent>
 
       <TabsContent className={TAB_PANEL_CLASS} value="finish">

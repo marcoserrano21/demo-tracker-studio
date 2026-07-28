@@ -65,7 +65,7 @@ export default function Header({ storeName, userRole, setUserRole, onStoreChange
         </div>
 
         <div className="flex items-center space-x-2">
-            <ThemeToggle />
+            <ThemeToggle storeCode={storeCode} />
             {userRole === 'manager' ? (
                 <Button variant="outline" size="sm" onClick={handleSwitchToAdvisor}>
                     <ShieldCheck className="mr-2 h-4 w-4 text-green-500" />

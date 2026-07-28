@@ -4,7 +4,6 @@
 
 import { useState, useTransition, useMemo } from 'react';
 import type { DriveLog, Vehicle, Advisor, UserRole } from '@/lib/types';
-import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format, isSameDay, isToday, parseISO, startOfDay, endOfDay, startOfMonth, endOfMonth, addDays, getDaysInMonth, getDay } from 'date-fns';
@@ -15,6 +14,8 @@ import { PlayCircle, XCircle, Loader2, CalendarDays, User, Clock, MapPin, Car, C
 import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, where, getDocs, writeBatch, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import CheckoutSheet from './checkout-sheet';
+import { VehiclePhoto } from './vehicle-photo';
+import { getVehicleImage } from '@/lib/data';
 import {
   canStartScheduledDrive,
   isScheduledDrivePastDue,
@@ -508,12 +509,12 @@ export default function ScheduleCalendar({ driveLogs, storeCode, vehicles, advis
                         <div className="flex items-center gap-4 min-w-0 flex-1">
                           <div className="relative flex-shrink-0">
                             <div className="relative h-14 w-14 rounded-2xl overflow-hidden bg-gradient-to-br from-background via-background/90 to-background/80 border-2 border-border/30 shadow-lg group-hover:shadow-xl transition-all duration-300">
-                              <Image
-                                src={require('@/lib/data').getVehicleImage(log.vehicleModel as any, log.vehicleTrim)}
+                              <VehiclePhoto
+                                src={getVehicleImage(log.vehicleModel as any, log.vehicleTrim)}
                                 alt={`${log.vehicleModel} ${log.vehicleTrim}`}
                                 fill
-                                sizes="56px"
-                                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                variant="thumb"
+                                className="transition-transform duration-300 group-hover:scale-110"
                               />
                             </div>
                             {/* Status Indicator Dot */}

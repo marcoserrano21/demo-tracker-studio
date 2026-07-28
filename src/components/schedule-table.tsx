@@ -4,7 +4,6 @@
 
 import { useTransition, useMemo, useState, useEffect } from 'react';
 import type { DriveLog, Vehicle, Advisor, UserRole } from '@/lib/types';
-import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -21,6 +20,8 @@ import { Button } from './ui/button';
 import { PlayCircle, XCircle, Loader2, Calendar, Timer } from 'lucide-react';
 import type { Timestamp } from 'firebase/firestore';
 import CheckoutSheet from './checkout-sheet';
+import { VehiclePhoto } from './vehicle-photo';
+import { getVehicleImage } from '@/lib/data';
 import { useFirebase, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { doc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
@@ -320,15 +321,14 @@ export default function ScheduleTable({ driveLogs, storeCode, vehicles, advisors
           <CardContent className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
-                <div className="relative h-10 w-10 rounded-2xl overflow-hidden bg-gradient-to-br from-muted/30 to-muted/10 border border-muted-foreground/20 flex-shrink-0">
-                  <Image
-                    src={require('@/lib/data').getVehicleImage(log.vehicleModel as any, log.vehicleTrim)}
+                  <div className="relative h-10 w-10 rounded-2xl overflow-hidden bg-gradient-to-br from-muted/30 to-muted/10 border border-muted-foreground/20 flex-shrink-0">
+                  <VehiclePhoto
+                    src={getVehicleImage(log.vehicleModel as any, log.vehicleTrim)}
                     alt={`${log.vehicleModel} ${log.vehicleTrim}`}
                     fill
-                    sizes="40px"
-                    className="object-cover"
+                    variant="thumb"
                   />
-                </div>
+                  </div>
                 <div>
                   <p className="font-medium text-foreground">{log.coPilot || log.advisorIn || 'N/A'}</p>
                   <p className="text-xs text-muted-foreground">Advisor</p>
@@ -419,12 +419,11 @@ export default function ScheduleTable({ driveLogs, storeCode, vehicles, advisors
         <TableCell className="py-4">
           <div className="flex items-center gap-2">
             <div className="relative h-8 w-8 lg:h-10 lg:w-10 rounded-2xl overflow-hidden bg-gradient-to-br from-muted/30 to-muted/10 border border-muted-foreground/20 flex-shrink-0">
-              <Image
-                src={require('@/lib/data').getVehicleImage(log.vehicleModel as any, log.vehicleTrim)}
+              <VehiclePhoto
+                src={getVehicleImage(log.vehicleModel as any, log.vehicleTrim)}
                 alt={`${log.vehicleModel} ${log.vehicleTrim}`}
                 fill
-                sizes="40px"
-                className="object-cover"
+                variant="thumb"
               />
             </div>
             <div className="min-w-0 flex-1">

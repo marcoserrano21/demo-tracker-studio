@@ -13,8 +13,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import Image from 'next/image';
 import { getVehicleImage } from '@/lib/data';
+import { VehiclePhoto } from './vehicle-photo';
 import { DDHUB_KEYS } from '@/lib/auth/session-keys';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { AchievementIcon } from './achievement-icon';
@@ -1050,7 +1050,12 @@ export default function MyHub({ advisor, driveLogs, vehicles, advisors, storeCod
                                     <CarouselItem key={v.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                                         <div className="p-1 select-none">
                                             <div className="relative aspect-video rounded-lg overflow-hidden">
-                                                <Image src={getVehicleImage(v.model, v.trim)} alt={v.model} layout="fill" objectFit="cover" />
+                                                <VehiclePhoto
+                                                  src={getVehicleImage(v.model, v.trim)}
+                                                  alt={v.model}
+                                                  fill
+                                                  variant="compact"
+                                                />
                                             </div>
                                             <p className="text-xs sm:text-sm font-semibold mt-2">{v.model} {v.trim}</p>
                                             <p className="text-[10px] sm:text-xs text-muted-foreground">...{v.vin.slice(-6)}</p>

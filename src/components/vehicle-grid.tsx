@@ -344,7 +344,16 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                 initialPurpose="Charging"
               />
             )}
-            <div className="flex flex-col md:flex-row gap-4 justify-between">
+            <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:justify-between">
+                <div className="flex items-center justify-between gap-2 md:hidden">
+                    <span className="text-sm font-medium text-muted-foreground">Fleet view</span>
+                    <div className="flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 p-0.5">
+                        <Button variant={fleetView === 'grid' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('grid')} aria-label="Grid view"><LayoutGrid className="h-4 w-4" /></Button>
+                        <Button variant={fleetView === 'compact' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('compact')} aria-label="Compact view"><View className="h-4 w-4" /></Button>
+                        <Button variant={fleetView === 'list' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('list')} aria-label="List view"><LayoutList className="h-4 w-4" /></Button>
+                        <Button variant={fleetView === 'carousel' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('carousel')} aria-label="Carousel view"><RectangleHorizontal className="h-4 w-4" /></Button>
+                    </div>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                     <div className="relative w-full sm:w-auto md:flex-1 md:max-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -447,11 +456,11 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                         </Button>
                     )}
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant={fleetView === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('grid')}><LayoutGrid /></Button>
-                    <Button variant={fleetView === 'compact' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('compact')}><View /></Button>
-                    <Button variant={fleetView === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('list')}><LayoutList /></Button>
-                    <Button variant={fleetView === 'carousel' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('carousel')}><RectangleHorizontal /></Button>
+                <div className="hidden md:flex items-center gap-2">
+                    <Button variant={fleetView === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('grid')} aria-label="Grid view"><LayoutGrid /></Button>
+                    <Button variant={fleetView === 'compact' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('compact')} aria-label="Compact view"><View /></Button>
+                    <Button variant={fleetView === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('list')} aria-label="List view"><LayoutList /></Button>
+                    <Button variant={fleetView === 'carousel' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('carousel')} aria-label="Carousel view"><RectangleHorizontal /></Button>
                 </div>
             </div>
 
