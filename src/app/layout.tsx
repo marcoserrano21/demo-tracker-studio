@@ -13,19 +13,19 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Demo Drive Hub — Showroom demo fleet OS',
-  description: 'Showroom demo fleet OS — find, start, and finish demos with live availability and FSD logging.',
+  title: 'Demo Drive Hub - Showroom demo fleet OS',
+  description: 'Showroom demo fleet OS - find, start, and finish demos with live availability and FSD logging.',
   applicationName: 'Demo Drive Hub',
   manifest: '/manifest.json',
   openGraph: {
-    title: 'Demo Drive Hub — Showroom demo fleet OS',
-    description: 'Showroom demo fleet OS — portfolio case study by Marco Serrano.',
+    title: 'Demo Drive Hub - Showroom demo fleet OS',
+    description: 'Showroom demo fleet OS - portfolio case study by Marco Serrano.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Demo Drive Hub — Showroom demo fleet OS',
-    description: 'Showroom demo fleet OS — find, start, and finish demos with live availability.',
+    title: 'Demo Drive Hub - Showroom demo fleet OS',
+    description: 'Showroom demo fleet OS - find, start, and finish demos with live availability.',
   },
   appleWebApp: {
     capable: true,

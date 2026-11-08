@@ -1,6 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // SECURITY NOTE (portfolio): any authenticated user (anonymous auth) can read/write ALL stores/*.
+    // The leadership / local sample demo (NEXT_PUBLIC_LOCAL_DEMO=1) must NOT point at this project.
     // Portfolio / demo mode: any signed-in user (anonymous auth) can read and write.
     // Store access is enforced in the app via httpOnly session cookies, not Firestore claims.
     match /stores/{storeId}/{document=**} {

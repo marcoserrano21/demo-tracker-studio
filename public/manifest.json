@@ -1,7 +1,7 @@
 {
   "name": "Demo Drive Hub",
   "short_name": "DD Hub",
-  "description": "Showroom demo fleet OS — find, start, and finish demos with live availability and FSD logging",
+  "description": "Showroom demo fleet OS - find, start, and finish demos with live availability and FSD logging",
   "start_url": "/?tab=fleet",
   "scope": "/",
   "display": "standalone",

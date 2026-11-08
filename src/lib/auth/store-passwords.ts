@@ -20,7 +20,6 @@ function parseStorePasswordsEnv(): Record<string, string> {
     try {
       const parsed = JSON.parse(raw) as Record<string, string>;
       if (parsed && typeof parsed === 'object') {
-        // Always ensure portfolio demo store is present (isolated from real stores)
         return {
           ...parsed,
           [DEMO_STORE_CODE]: parsed[DEMO_STORE_CODE] ?? DEMO_STORE_PASSWORD,
@@ -38,21 +37,9 @@ function parseStorePasswordsEnv(): Record<string, string> {
     };
   }
 
-  // Development fallback only — never used when NODE_ENV=production
+  // Development: only the isolated portfolio demo store (passwords via env, never committed).
   return {
-    [DEMO_STORE_CODE]: DEMO_STORE_PASSWORD,
-    clermont: 'clermont2026',
-    gainesville: 'gainesville2026',
-    jacksonville: 'jacksonville2026',
-    kissimmee: 'kissimmee2026',
-    'orlando-florida-mall': 'teslamall2026',
-    'orlando-john-young-pkwy': 'jy2026',
-    'orlando-lee-vista-blvd': 'leevista2026',
-    pensacola: 'pensacola2026',
-    tallahassee: 'tallahassee2026',
-    'merritt-island': 'merritt2026',
-    'tampa-mall-showroom': 'tampamall2026',
-    'fort-lauderdale': 'teslafort2026',
+    [DEMO_STORE_CODE]: process.env.DEMO_STORE_PASSWORD ?? DEMO_STORE_PASSWORD,
   };
 }
 
@@ -82,7 +69,6 @@ export function verifyManagerPassword(advisorEmail: string | undefined, password
   }
 
   const resolvedDefault = defaultPassword ?? 'tesla2026';
-  // Portfolio demo: same manager PIN as everyone else (tesla2026) unless env override is set
   const resolvedOverride = overridePassword ?? resolvedDefault;
 
   if (advisorEmail && advisorEmail.toLowerCase() === overrideEmail.toLowerCase()) {

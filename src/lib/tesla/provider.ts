@@ -2,7 +2,7 @@ import { isTeslaFleetConfigured, getTeslaFleetConfig } from './config';
 import { TeslaFleetClient } from './client';
 import type { TelemetryProvider, VehicleTelemetry } from './types';
 
-/** No-op provider when Fleet credentials are absent — UI stays on manual battery. */
+/** No-op provider when Fleet credentials are absent - UI stays on manual battery. */
 class ManualTelemetryProvider implements TelemetryProvider {
   readonly name = 'manual' as const;
 

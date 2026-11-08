@@ -22,19 +22,17 @@ const NOTION_CASE_STUDY_URL =
   'https://app.notion.com/p/The-Demo-Drive-Hub-28dc2787689780abbd0dda2d88ff91c4?source=copy_link';
 
 const METRICS = [
-  { label: 'Admin time saved', value: '~50%' },
-  { label: 'Drives logged (pilot)', value: '147' },
-  { label: 'Advisors onboarded', value: '12 in 2 weeks' },
-  { label: 'Double bookings', value: '0 after launch' },
-  { label: 'Issues flagged early', value: '8 via keywords' },
-  { label: 'Avg demo duration', value: '57 min vs 30 assumed' },
+  { label: 'Pilot: drives logged', value: '147 (~1.5 months)' },
+  { label: 'Pilot: advisors onboarded', value: '15 in 2 weeks' },
+  { label: 'Pilot: avg demo duration', value: '57 min vs 30 assumed' },
+  { label: 'Estimate: admin time', value: '~50% (not in-app)' },
 ];
 
 const BEFORE_AFTER = [
   { before: 'Whiteboard tracking', after: 'Real-time dashboard' },
   { before: '5+ min per demo log', after: 'Under 30 seconds' },
   { before: 'Group chat photos', after: 'Structured check-in/out' },
-  { before: 'Frequent double-bookings', after: 'Zero after launch' },
+  { before: 'Frequent double-bookings', after: 'Scheduling guardrails in app' },
   { before: 'No analytics', after: 'Conversion + FSD + charts' },
   { before: 'Lost data', after: 'Searchable history + CSV' },
 ];
@@ -112,12 +110,12 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              This started on an EV retail sales floor. Demo drives were the peak customer moment — and behind the
+              This started on an EV retail sales floor. Demo drives were the peak customer moment - and behind the
               scenes they ran on whiteboards, group chats, and memory. One availability check took 25 minutes while a
               guest waited. Pilot data later showed demos averaged 57 minutes vs the 30 everyone assumed.
             </p>
             <p>
-              Demo Drive Hub is the system that grew out of that chaos. The product stays OEM-neutral — a showroom
+              Demo Drive Hub is the system that grew out of that chaos. The product stays OEM-neutral - a showroom
               demo fleet OS for any brand. Manufacturer names appear only as origin story and case-study context, not
               as the product brand.
             </p>

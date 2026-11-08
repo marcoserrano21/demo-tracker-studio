@@ -88,23 +88,23 @@ export function buildMorningBrief(params: {
     .sort((a, b) => b.demos - a.demos || b.fsdSubs - a.fsdSubs || a.name.localeCompare(b.name))
     .slice(0, 3);
 
-  let action = 'Floor looks calm — keep Find → Start → Finish humming.';
+  let action = 'Floor looks calm - keep Find → Start → Finish humming.';
   let actionTab: MorningBriefData['actionTab'] = 'fleet';
 
   if (overdue > 0) {
-    action = `${overdue} vehicle${overdue === 1 ? '' : 's'} overdue — open Finish and check them in now.`;
+    action = `${overdue} vehicle${overdue === 1 ? '' : 's'} overdue - open Finish and check them in now.`;
     actionTab = 'finish';
   } else if (needsAttention > 0) {
-    action = `${needsAttention} need${needsAttention === 1 ? 's' : ''} attention — resolve issues before the next rush.`;
+    action = `${needsAttention} need${needsAttention === 1 ? 's' : ''} attention - resolve issues before the next rush.`;
     actionTab = 'fleet';
   } else if (available === 0 && onDemo > 0) {
-    action = 'No cars available — watch returns and prep the next Start.';
+    action = 'No cars available - watch returns and prep the next Start.';
     actionTab = 'finish';
   } else if (demosToday > 0 && fsdSubRate < 20) {
-    action = `FSD-sub attach is ${fsdSubRate}% today — coach the floor on Sales outcome logging.`;
+    action = `FSD-sub attach is ${fsdSubRate}% today - coach the floor on Sales outcome logging.`;
     actionTab = 'analytics';
   } else if (available > 0 && demosToday === 0) {
-    action = `${available} available — get the first demo of the day on the board.`;
+    action = `${available} available - get the first demo of the day on the board.`;
     actionTab = 'fleet';
   }
 

@@ -187,7 +187,7 @@ export function FsdOrdersTab({
               FSD Orders
             </CardTitle>
             <CardDescription className="mt-1.5 text-sm">
-              Track Full Self-Driving (Supervised) Monthly Subscription take rate — from order
+              Track Full Self-Driving (Supervised) Monthly Subscription take rate - from order
               placement, follow-up calls, or demo check-in. Store take rate:{' '}
               <span className="font-medium text-foreground">{takeRate}%</span> ({fsdOrders.length}{' '}
               records)
@@ -228,7 +228,7 @@ export function FsdOrdersTab({
                     <TableCell>
                       <Badge variant="outline">{sourceLabel(record.source)}</Badge>
                     </TableCell>
-                    <TableCell>{record.advisorName || '—'}</TableCell>
+                    <TableCell>{record.advisorName || '-'}</TableCell>
                     <TableCell>
                       {record.fsdSubscribed ? (
                         <Badge className="bg-emerald-600 hover:bg-emerald-600">Subscribed</Badge>
@@ -274,7 +274,7 @@ export function FsdOrdersTab({
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit FSD order' : 'Add FSD order'}</DialogTitle>
             <DialogDescription>
-              Soft ops labels only — no real customer names, emails, or phones (keeps this PII-free).
+              Soft ops labels only - no real customer names, emails, or phones (keeps this PII-free).
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -287,7 +287,7 @@ export function FsdOrdersTab({
                 placeholder="e.g. ORD-4821 · Model Y"
               />
               <p className="text-xs text-muted-foreground">
-                Use an order ref or initials — never full name, email, or phone.
+                Use an order ref or initials - never full name, email, or phone.
               </p>
             </div>
             <div className="space-y-2">

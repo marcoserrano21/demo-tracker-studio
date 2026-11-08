@@ -1,4 +1,4 @@
-// Chart Builder Integration Demo — dev only
+// Chart Builder Integration Demo - dev only
 
 'use client';
 

@@ -34,7 +34,7 @@ export function TelemetrySyncButton({
   vehicles,
   onVehiclesUpdate,
 }: TelemetrySyncButtonProps) {
-  const { firestore } = useFirebase();
+  const { firestore, isLocalDemo } = useFirebase();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [lastConfigured, setLastConfigured] = useState<boolean | null>(null);
@@ -116,6 +116,10 @@ export function TelemetrySyncButton({
       setLoading(false);
     }
   };
+
+  if (isLocalDemo) {
+    return null;
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">

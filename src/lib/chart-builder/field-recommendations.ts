@@ -192,7 +192,7 @@ export function getSmartRecommendations(
         ),
         measures: pickFields(availableFields, ['_count', 'batteryUsed', 'rating', 'actualDuration'], 3),
         reasoning:
-          'Combo chart: one date/category axis with multiple metrics — e.g. Drive Count (bars) + Avg Battery Used (line).',
+          'Combo chart: one date/category axis with multiple metrics - e.g. Drive Count (bars) + Avg Battery Used (line).',
       };
 
     default:

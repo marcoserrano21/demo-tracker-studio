@@ -9,6 +9,7 @@ import AdvisorSelectorDialog from '@/components/advisor-selector-dialog';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
 import { useFirebase } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { isLocalDemoClient } from '@/lib/local-demo/config';
 import { clearStoreSession, revokeManagerAccess } from '@/app/auth/actions';
 import { DDHUB_KEYS, setSessionItem, clearDdhubSession } from '@/lib/auth/session-keys';
 import { seedDemoStoreIfNeeded } from '@/lib/demo-seed';
@@ -17,6 +18,7 @@ import { useStoreData } from '@/hooks/home/use-store-data';
 import { useAdvisorSession } from '@/hooks/home/use-advisor-session';
 import { useAdvisorPreferences } from '@/hooks/home/use-advisor-preferences';
 import { useDashboardPolicies } from '@/hooks/home/use-dashboard-policies';
+import { useLocalDemoStore } from '@/local-demo/store';
 
 function HomePageContent() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
@@ -66,12 +68,14 @@ function HomePageContent() {
   }, []);
 
   useEffect(() => {
+    if (isLocalDemoClient()) return;
     if (!isUserLoading && !user && auth) {
       initiateAnonymousSignIn(auth);
     }
   }, [isUserLoading, user, auth]);
 
   useEffect(() => {
+    if (isLocalDemoClient()) return;
     if (!firestore || !currentStore || !user) return;
     if (typeof window === 'undefined' || sessionStorage.getItem(DDHUB_KEYS.demoMode) !== 'true') return;
 
@@ -141,9 +145,19 @@ function HomePageContent() {
     }
   };
 
+  const handleAdvisorPatch = useCallback((patch: Partial<Advisor>) => {
+    setCurrentAdvisor((prev) => {
+      if (!prev) return prev;
+      if (isLocalDemoClient()) {
+        useLocalDemoStore.getState().patchAdvisor(prev.id, patch);
+      }
+      return { ...prev, ...patch };
+    });
+  }, []);
+
   const pageIsLoading =
     isLoading ||
-    isUserLoading ||
+    (!isLocalDemoClient() && isUserLoading) ||
     (currentStore && (areAdvisorsLoading || areVehiclesLoading || !currentAdvisor));
 
   if (pageIsLoading) {
@@ -184,6 +198,7 @@ function HomePageContent() {
             todaysScheduledDrivesCount={todaysScheduledDrivesCount}
             onAdvisorsUpdate={handleAdvisorUpdate}
             onVehiclesUpdate={setVehicles}
+            onAdvisorPatch={handleAdvisorPatch}
           />
           <AdvisorSelectorDialog
             isOpen={isAdvisorDialogOpen}

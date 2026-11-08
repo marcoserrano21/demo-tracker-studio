@@ -6,7 +6,7 @@ import type { DriveLog, Vehicle } from './types';
  * Check-in battery default from checkout level by elapsed drive time:
  * - under 15 minutes → −2%
  * - 15+ minutes → −5%
- * Clamped to 0–100. Prefill only — advisors can still edit.
+ * Clamped to 0–100. Prefill only - advisors can still edit.
  */
 export const DEMO_BATTERY_SHORT_DRIVE_MINUTES = 15;
 export const DEMO_BATTERY_DROP_SHORT_PERCENT = 2;
@@ -132,7 +132,7 @@ export function findUpcomingSchedule(
   return future[0];
 }
 
-/** Any open schedule for a vehicle (soonest by start time) — for badge dates on Find/Start. */
+/** Any open schedule for a vehicle (soonest by start time) - for badge dates on Find/Start. */
 export function findVehicleSchedule(
   vehicleId: string,
   scheduledDrives: DriveLog[] | undefined,

@@ -109,7 +109,7 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
         [scheduledDrives, vehicle.id],
     );
 
-    /** Block walk-in Start only in the 15 min before the booking — otherwise checkout stays open. */
+    /** Block walk-in Start only in the 15 min before the booking - otherwise checkout stays open. */
     const isReservedSoon = useMemo(() => {
         const booking = upcomingSchedule ?? openSchedule;
         if (!booking) return false;
@@ -458,7 +458,7 @@ function VehicleCardItem({ vehicle, advisors, currentAdvisor, storeCode, userRol
     );
 }
 
-// Memoize component — re-render when drive logs or active checkout state changes.
+// Memoize component - re-render when drive logs or active checkout state changes.
 export default memo(VehicleCardItem, (prevProps, nextProps) => {
   const prevActiveLog = findActiveDriveLog(prevProps.vehicle, prevProps.driveLogs);
   const nextActiveLog = findActiveDriveLog(nextProps.vehicle, nextProps.driveLogs);

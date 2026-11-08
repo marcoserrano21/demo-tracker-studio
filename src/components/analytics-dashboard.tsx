@@ -91,10 +91,10 @@ const chartConfig = {
 const AdvancedAnalyticsSection = lazy(() => import('./advanced-analytics-section'));
 
 const QUICK_ANALYTICS_PRESETS = [
-  { id: 'demo-drives-by-model', label: 'Drives by Model', description: 'Bar chart — popular demo vehicles' },
-  { id: 'advisor-performance-ranking', label: 'Top Advisors', description: 'Horizontal bar — team leaderboard' },
-  { id: 'daily-demo-volume-trend', label: 'Daily Volume', description: 'Line chart — trend over time' },
-  { id: 'drive-duration-distribution', label: 'Duration Mix', description: 'Pie chart — 40min vs overnight' },
+  { id: 'demo-drives-by-model', label: 'Drives by Model', description: 'Bar chart - popular demo vehicles' },
+  { id: 'advisor-performance-ranking', label: 'Top Advisors', description: 'Horizontal bar - team leaderboard' },
+  { id: 'daily-demo-volume-trend', label: 'Daily Volume', description: 'Line chart - trend over time' },
+  { id: 'drive-duration-distribution', label: 'Duration Mix', description: 'Pie chart - 40min vs overnight' },
 ] as const;
 
 

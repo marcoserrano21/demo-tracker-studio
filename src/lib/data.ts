@@ -253,7 +253,7 @@ export const regions: Record<string, string> = {
 const STORE_CONFIG: {
   [key: string]: Omit<Store, 'vehicles' | 'advisors' | 'region'> & { region: string };
 } = {
-  /** Isolated portfolio demo — not shown in store password login. */
+  /** Isolated portfolio demo - not shown in store password login. */
   'demo-hub': { code: 'demo-hub', name: 'Demo Store', region: 'demo' },
   clermont: { code: 'clermont', name: 'Clermont', region: 'florida-north' },
   gainesville: { code: 'gainesville', name: 'Gainesville', region: 'florida-north' },
@@ -307,7 +307,7 @@ export const stores: (StoreInfo & { region: string })[] = Object.values(STORE_CO
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
-/** Real showrooms only — excludes the isolated portfolio Demo Store. */
+/** Real showrooms only - excludes the isolated portfolio Demo Store. */
 export const loginStores: (StoreInfo & { region: string })[] = stores.filter(
   (store) => store.region !== 'demo',
 );
@@ -319,7 +319,7 @@ export function getRegionalPeerStores(
 ): Array<StoreInfo & { region: string }> {
   const current = stores.find((s) => s.code === storeCode);
   if (!current || current.region === 'demo') {
-    // Demo Store is sandbox — no live peer stores
+    // Demo Store is sandbox - no live peer stores
     return [];
   }
   return stores

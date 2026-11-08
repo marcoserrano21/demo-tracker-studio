@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_LOCAL_DEMO: process.env.NEXT_PUBLIC_LOCAL_DEMO ?? '1',
+    NEXT_PUBLIC_HIDE_STORE_LOGIN:
+      process.env.NEXT_PUBLIC_HIDE_STORE_LOGIN ??
+      (process.env.NEXT_PUBLIC_LOCAL_DEMO === '0' ? '0' : '1'),
+  },
   reactStrictMode: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,

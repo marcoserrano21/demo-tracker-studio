@@ -1,4 +1,4 @@
-# Career copy — Marco Serrano
+# Career copy - Marco Serrano
 
 Paste into LinkedIn, X, portfolio site, or recruiter DMs. Voice: sharp, human, story-first. No corporate filler.
 
@@ -30,14 +30,15 @@ Five to six weeks later I had a mobile-first PWA on the floor:
 - Optional live telemetry when Fleet API credentials are set
 - Try Demo Store with auto-seeded fleet for portfolio visitors
 
-**Pilot numbers** (independent project, not an official org tool):
+**Pilot observations** (not computed in-app; independent discontinued pilot, not a Tesla product):
+
+- 147 drives logged in ~1.5 months
+- 15 advisors onboarded in 2 weeks
+- Real avg drive: 57 min, not the assumed 30
+
+**Estimates** (label as estimates in public copy):
 
 - ~50% less demo admin time
-- 147 drives logged in ~1.5 months
-- 12 advisors onboarded in 2 weeks
-- Zero double-bookings after launch
-- 8 maintenance issues flagged early
-- Real avg drive: 57 min, not the assumed 30
 
 One advisor said it felt like someone finally turned the lights on.
 

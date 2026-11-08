@@ -9,6 +9,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { regions as allRegions, loginStores as allStores } from '@/lib/data';
+import { isHideStorePasswordLogin } from '@/lib/local-demo/config';
 import { Input } from './ui/input';
 import { verifyStoreAccess, tryDemoStoreAccess } from '@/app/auth/actions';
 import { invokeServerAction } from '@/lib/server-action-client';
@@ -29,6 +30,7 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [showStoreLogin, setShowStoreLogin] = useState(false);
   const { toast } = useToast();
+  const hideStoreLogin = isHideStorePasswordLogin();
 
   const filteredStores = useMemo(() => {
     if (!selectedRegion) return [];
@@ -80,7 +82,10 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
       const result = await invokeServerAction(tryDemoStoreAccess);
       if (result.success && result.storeCode) {
         setSessionItem(DDHUB_KEYS.demoMode, 'true');
-        toast({ title: 'Demo ready', description: 'Pick an advisor, then land on Floor Mode — tap Start on any available vehicle.' });
+        toast({
+          title: 'Demo ready',
+          description: 'Pick an advisor, then use Find: Grid, Compact, List, or Carousel above the fleet.',
+        });
         onStoreSelect(result.storeCode, { demo: true });
       } else {
         toast({
@@ -111,16 +116,16 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
           {PRODUCT_SUBTITLE}
         </p>
         <p className="mt-3 max-w-md text-muted-foreground">
-          Find a car. Start the demo. Finish with FSD logged — in seconds, not minutes.
+          Find a car. Start the demo. Finish with FSD logged in seconds, not minutes.
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
-          Portfolio project by Marco Serrano · OEM-neutral demo fleet
+          Discontinued independent pilot by Marco Serrano. Sample data only. Not a Tesla product.
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-foreground">
           <span className="rounded-full border border-border/60 px-2.5 py-1">Next.js 16</span>
-          <span className="rounded-full border border-border/60 px-2.5 py-1">147 pilot drives</span>
-          <span className="rounded-full border border-border/60 px-2.5 py-1">50% less admin</span>
-          <span className="rounded-full border border-border/60 px-2.5 py-1">PWA</span>
+          <span className="rounded-full border border-border/60 px-2.5 py-1">147 drives (pilot obs.)</span>
+          <span className="rounded-full border border-border/60 px-2.5 py-1">15 advisors / 2 wk</span>
+          <span className="rounded-full border border-border/60 px-2.5 py-1">57 min avg drive</span>
         </div>
       </div>
 
@@ -128,7 +133,7 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">Get started</CardTitle>
           <CardDescription>
-          New here? One tap opens an isolated sample store with fake advisors, vehicles, and drive history — separate from real showrooms.
+          One tap opens the isolated demo-hub store with sample advisors, vehicles, and drive history. No live showroom data.
         </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -148,6 +153,7 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
             Try Demo Store
           </Button>
 
+          {!hideStoreLogin && (
           <Collapsible open={showStoreLogin} onOpenChange={setShowStoreLogin}>
             <CollapsibleTrigger asChild>
               <Button type="button" variant="outline" className="w-full justify-between rounded-xl">
@@ -206,6 +212,7 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
           </form>
             </CollapsibleContent>
           </Collapsible>
+          )}
 
           <p className="text-center text-xs text-muted-foreground">
             <Link href="/about" className="underline underline-offset-4 hover:text-foreground">

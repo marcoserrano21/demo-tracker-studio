@@ -91,7 +91,7 @@ export function CoachingQueue({ advisors, driveLogs, className }: CoachingQueueP
           Coaching queue
         </CardTitle>
         <CardDescription>
-          This week — low FSD-sub attach or missing feedback. Coach before the weekend rush.
+          This week - low FSD-sub attach or missing feedback. Coach before the weekend rush.
         </CardDescription>
       </CardHeader>
       <CardContent>

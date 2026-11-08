@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/** Omit keys whose values are `undefined` — Firestore rejects undefined field values. */
+/** Omit keys whose values are `undefined` - Firestore rejects undefined field values. */
 export function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(([, value]) => value !== undefined),

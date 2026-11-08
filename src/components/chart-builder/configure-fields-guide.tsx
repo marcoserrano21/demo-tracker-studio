@@ -37,7 +37,7 @@ function getSetupChecklist(chartType: ChartType, selectedFields: DataField[]) {
     {
       id: 'dimension',
       label: pieLike
-        ? 'Add a category field (Dimension) — e.g. Vehicle Model or Advisor'
+        ? 'Add a category field (Dimension) - e.g. Vehicle Model or Advisor'
         : 'Add at least one Dimension to group data (X-axis or categories)',
       done: dimensions.length > 0,
       required: needsDimension,
@@ -45,14 +45,14 @@ function getSetupChecklist(chartType: ChartType, selectedFields: DataField[]) {
     {
       id: 'measure',
       label: needsMeasure
-        ? 'Add a Measure (numeric value) — counts auto-aggregate when you drag a dimension only'
+        ? 'Add a Measure (numeric value) - counts auto-aggregate when you drag a dimension only'
         : 'Optional: add a Measure for size or values',
       done: measures.length > 0 || pieLike,
       required: needsMeasure && !pieLike,
     },
     {
       id: 'review',
-      label: 'Remove extra fields if the chart looks cluttered — keep 1–2 dimensions and 1 measure for quick charts',
+      label: 'Remove extra fields if the chart looks cluttered - keep 1–2 dimensions and 1 measure for quick charts',
       done: selectedFields.length <= 3 && selectedFields.length > 0,
       required: false,
     },
@@ -103,13 +103,13 @@ export function ConfigureFieldsGuide({
           <li className="flex items-start gap-2">
             <span className="font-bold text-primary flex-shrink-0">1.</span>
             <span>
-              <strong className="text-foreground">Dimensions (categories):</strong> drag blue fields — group by model, advisor, date, or purpose.
+              <strong className="text-foreground">Dimensions (categories):</strong> drag blue fields - group by model, advisor, date, or purpose.
             </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="font-bold text-primary flex-shrink-0">2.</span>
             <span>
-              <strong className="text-foreground">Measures (numbers):</strong> drag green fields — battery used, duration, ratings, or counts.
+              <strong className="text-foreground">Measures (numbers):</strong> drag green fields - battery used, duration, ratings, or counts.
             </span>
           </li>
           <li className="flex items-start gap-2">

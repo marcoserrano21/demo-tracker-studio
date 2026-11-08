@@ -12,7 +12,7 @@ import {
 import { DEFAULT_STORE_SETTINGS } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-/** Manager/Moderator store setting — land on Morning Brief after elevate. */
+/** Manager/Moderator store setting - land on Morning Brief after elevate. */
 export function MorningBriefLandingSetting({
   storeCode,
   className,

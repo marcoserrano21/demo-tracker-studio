@@ -14,7 +14,7 @@ interface LowBatteryQueueProps {
   className?: string;
 }
 
-/** Available cars under 20% — Charge CTA queue. */
+/** Available cars under 20% - Charge CTA queue. */
 export function LowBatteryQueue({ vehicles, onCharge, className }: LowBatteryQueueProps) {
   const queue = useMemo(
     () =>
@@ -39,7 +39,7 @@ export function LowBatteryQueue({ vehicles, onCharge, className }: LowBatteryQue
         <div>
           <p className="text-sm font-semibold">Low battery queue</p>
           <p className="text-xs text-muted-foreground">
-            Available under {BATTERY_QUEUE_PERCENT}% — charge before the next rush.
+            Available under {BATTERY_QUEUE_PERCENT}% - charge before the next rush.
           </p>
         </div>
       </div>

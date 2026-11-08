@@ -15,7 +15,7 @@ type VehiclePhotoProps = Omit<ImageProps, 'src' | 'alt'> & {
 const VARIANT_SIZES: Record<VehiclePhotoVariant, string> = {
   // Full-bleed fleet cards (grid)
   card: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px',
-  // Carousel slides — nearly full width on phones, half on tablets
+  // Carousel slides - nearly full width on phones, half on tablets
   carousel: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 420px',
   // Floor Mode / list thumbs (80–96 CSS px → request ~2–3× for retina)
   thumb: '(max-width: 768px) 192px, 160px',
@@ -30,7 +30,7 @@ function isLocalFleetSrc(src: string): boolean {
 
 /**
  * Vehicle photography for fleet UI.
- * Local `/vehicles/*` assets are already compressed JPEGs (~1024px) —
+ * Local `/vehicles/*` assets are already compressed JPEGs (~1024px) -
  * skipping the optimizer avoids a second AVIF/WebP pass that looks pixelated on mobile.
  */
 export function VehiclePhoto({
@@ -51,7 +51,7 @@ export function VehiclePhoto({
       alt={alt}
       sizes={sizes ?? VARIANT_SIZES[variant]}
       quality={quality ?? 90}
-      // Local fleet JPEGs: serve originals — sharper on phone/tablet retina
+      // Local fleet JPEGs: serve originals - sharper on phone/tablet retina
       unoptimized={unoptimized ?? localFleet}
       className={cn('object-cover object-center', className)}
       {...rest}

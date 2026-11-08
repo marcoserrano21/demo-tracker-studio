@@ -130,10 +130,9 @@ export async function tryDemoStoreAccess(): Promise<{
   storeCode?: string;
   error?: string;
 }> {
-  const { storeCode, password } = getDemoStoreCredentials();
-  const result = await verifyStoreAccess(storeCode, password);
-  if (!result.success) {
-    return { success: false, error: result.error };
-  }
+  const { storeCode } = getDemoStoreCredentials();
+  const jar = await cookies();
+  jar.set(COOKIE_STORE, storeCode, cookieOptions());
+  jar.delete(COOKIE_MANAGER);
   return { success: true, storeCode };
 }

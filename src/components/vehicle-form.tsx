@@ -321,7 +321,7 @@ export function VehicleForm({ vehicle, onSubmit, onCancel, storeCode = '' }: Veh
             autoComplete="off"
           />
           <p className="text-xs text-muted-foreground">
-            For manager records and CSV export only — not shown on the Fleet page.
+            For manager records and CSV export only - not shown on the Fleet page.
           </p>
           {errors.licensePlate && <p className="text-destructive text-sm">{errors.licensePlate.message}</p>}
       </div>
