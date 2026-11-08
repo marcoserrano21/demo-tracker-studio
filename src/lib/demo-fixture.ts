@@ -51,9 +51,10 @@ export function buildDemoVehicles(storeCode: string): Array<Vehicle & { id: stri
       seats: '5-seater' as const,
       imageUrl: getVehicleImage('Model Y', 'Performance'),
       batteryLevel: 72,
-      driveStartedAt: Date.now() - 35 * 60 * 1000,
-      expectedDuration: 60,
+      driveStartedAt: Date.now() - 95 * 60 * 1000,
+      expectedDuration: 57,
       currentDriveId: 'demo-log-active-01',
+      overdue: true,
     },
     {
       id: 'demo-vehicle-03',
@@ -64,7 +65,7 @@ export function buildDemoVehicles(storeCode: string): Array<Vehicle & { id: stri
       status: 'Charging' as const,
       seats: '5-seater' as const,
       imageUrl: getVehicleImage('Cybertruck', 'Premium All-Wheel Drive'),
-      batteryLevel: 34,
+      batteryLevel: 22,
       currentDriveId: 'demo-log-active-02',
       wheelSize: '20" Core Wheels',
     },
@@ -119,10 +120,10 @@ export function buildDemoVehicles(storeCode: string): Array<Vehicle & { id: stri
       trim: 'Premium All-Wheel Drive',
       exteriorColor: 'Pearl White Multi-Coat',
       interiorColor: 'Black',
-      status: 'Available' as const,
+      status: 'Needs Attention' as const,
       seats: '5-seater' as const,
       imageUrl: getVehicleImage('Model 3', 'Premium All-Wheel Drive'),
-      batteryLevel: 67,
+      batteryLevel: 26,
     },
   ];
 
@@ -222,8 +223,8 @@ export function buildDemoDriveLogs(
     vehicleSeats: '5-seater',
     coPilot: 'Alice Johnson',
     purpose: 'Demo',
-    startTime: Timestamp.fromDate(new Date(now - 35 * 60 * 1000)),
-    expectedDuration: 60,
+    startTime: Timestamp.fromDate(new Date(now - 95 * 60 * 1000)),
+    expectedDuration: 57,
     startBattery: 78,
   });
 

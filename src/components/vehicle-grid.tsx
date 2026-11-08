@@ -20,6 +20,8 @@ import { vehicleOptions, getExteriorColorsForVehicle, getInteriorColorsForVehicl
 import { cn } from '@/lib/utils';
 import { useFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { shouldUseLocalDatastore } from '@/lib/local-demo/config';
+import { useLocalDemoStore } from '@/local-demo/store';
 import { Table, TableBody, TableHeader, TableRow, TableHead } from './ui/table';
 import VehicleCarousel from './vehicle-carousel';
 import { FleetAttentionStrip } from './fleet-attention-strip';
@@ -72,6 +74,8 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     const [chargeVehicle, setChargeVehicle] = useState<Vehicle | null>(null);
     
     const { firestore } = useFirebase();
+    const patchLocalAdvisor = useLocalDemoStore((s) => s.patchAdvisor);
+    const useLocalDatastore = shouldUseLocalDatastore();
 
     useEffect(() => {
         setSortKey(currentAdvisor.defaultSortOrder || 'model');
@@ -81,9 +85,25 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
 
     const handleFleetViewChange = (view: FleetView) => {
         setFleetView(view);
+        if (useLocalDatastore) {
+            patchLocalAdvisor(currentAdvisor.id, { fleetView: view });
+            return;
+        }
         if (firestore) {
             const advisorRef = doc(firestore, `stores/${storeCode}/advisors/${currentAdvisor.id}`);
             updateDocumentNonBlocking(advisorRef, { fleetView: view });
+        }
+    };
+
+    const handleSortKeyChange = (value: SortKey) => {
+        setSortKey(value);
+        if (useLocalDatastore) {
+            patchLocalAdvisor(currentAdvisor.id, { defaultSortOrder: value });
+            return;
+        }
+        if (firestore) {
+            const advisorRef = doc(firestore, `stores/${storeCode}/advisors/${currentAdvisor.id}`);
+            updateDocumentNonBlocking(advisorRef, { defaultSortOrder: value });
         }
     };
 
@@ -314,9 +334,16 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     return (
         <div className="space-y-6">
             <div className="space-y-2 mb-6">
-                 <div className="flex flex-col">
-                    <div className="text-3xl font-bold tracking-tight">Find · {advisorName}</div>
-                    <div className="text-muted-foreground">Floor availability for {storeName}. Available first - Start a demo in one tap.</div>
+                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="flex flex-col">
+                      <div className="text-3xl font-bold tracking-tight">Find · {advisorName}</div>
+                      <div className="text-muted-foreground">Floor availability for {storeName}. Available first - Start a demo in one tap.</div>
+                    </div>
+                    {onNavigateTab ? (
+                      <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => onNavigateTab('finish')}>
+                        Floor view (Finish)
+                      </Button>
+                    ) : null}
                 </div>
             </div>
             <OverdueNudgeBanner
@@ -374,7 +401,7 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                             ))}
                         </SelectContent>
                     </Select>
-                     <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
+                     <Select value={sortKey} onValueChange={(value) => handleSortKeyChange(value as SortKey)}>
                         <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Sort by" />
                         </SelectTrigger>

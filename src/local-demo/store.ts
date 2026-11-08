@@ -22,6 +22,7 @@ type LocalDemoState = {
   settings: StoreSettings;
   resetFixture: () => void;
   setAdvisors: (advisors: Advisor[]) => void;
+  patchAdvisor: (advisorId: string, patch: Partial<Advisor>) => void;
   setVehicles: (vehicles: Vehicle[]) => void;
   patchVehicle: (update: Partial<Vehicle> & { id: string }) => void;
   openSchedulesForVehicle: (vehicleId: string) => DriveLog[];
@@ -84,6 +85,12 @@ export const useLocalDemoStore = create<LocalDemoState>((set, get) => ({
   },
 
   setAdvisors: (advisors) => set({ advisors }),
+
+  patchAdvisor: (advisorId, patch) =>
+    set((state) => ({
+      advisors: state.advisors.map((a) => (a.id === advisorId ? { ...a, ...patch } : a)),
+    })),
+
   setVehicles: (vehicles) => set({ vehicles }),
 
   patchVehicle: (update) =>
