@@ -36,7 +36,7 @@ export interface Vehicle {
   expectedDuration?: number;
   sold?: boolean;
   soldDate?: Timestamp;
-  /** Stored for ops/export only — not shown on the public Fleet view */
+  /** Stored for ops/export only - not shown on the public Fleet view */
   licensePlate?: string;
   /** OEM / manual telemetry */
   latitude?: number;
@@ -141,7 +141,7 @@ export interface DriveLog {
   fsdSubscriptionAttached?: FsdSubscriptionAnswer;
 }
 
-/** Lightweight CRM outcome — no PII; soft labels only. */
+/** Lightweight CRM outcome - no PII; soft labels only. */
 export interface DemoOutcomeRecord {
   id: string;
   storeId: string;
@@ -153,7 +153,7 @@ export interface DemoOutcomeRecord {
   customerPurchased: boolean;
   fsdSubscribed: boolean;
   fsdActivated: boolean;
-  /** Soft ops label e.g. "Demo · Model Y ···1002" — never real customer PII */
+  /** Soft ops label e.g. "Demo · Model Y ···1002" - never real customer PII */
   outcomeLabel: string;
   createdAt: Timestamp | number | Date;
   createdBy: string;
@@ -162,7 +162,7 @@ export interface DemoOutcomeRecord {
 export interface FsdOrderRecord {
   id: string;
   storeId: string;
-  /** Soft identifier for ops (initials / order ref) — avoid PII in portfolio demos */
+  /** Soft identifier for ops (initials / order ref) - avoid PII in portfolio demos */
   customerLabel: string;
   orderedAt: Timestamp | number | Date;
   fsdSubscribed: boolean;

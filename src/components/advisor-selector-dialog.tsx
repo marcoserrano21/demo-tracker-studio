@@ -63,7 +63,7 @@ export default function AdvisorSelectorDialog({ isOpen, advisors, onAdvisorSelec
         <DialogHeader>
           <DialogTitle>Select Your Name</DialogTitle>
           <DialogDescription>
-            Pick your name to open Floor Mode — available vehicles first, ready to Start.
+            Pick your name to open Floor Mode - available vehicles first, ready to Start.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">

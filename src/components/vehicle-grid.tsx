@@ -316,7 +316,7 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
             <div className="space-y-2 mb-6">
                  <div className="flex flex-col">
                     <div className="text-3xl font-bold tracking-tight">Find · {advisorName}</div>
-                    <div className="text-muted-foreground">Floor availability for {storeName}. Available first — Start a demo in one tap.</div>
+                    <div className="text-muted-foreground">Floor availability for {storeName}. Available first - Start a demo in one tap.</div>
                 </div>
             </div>
             <OverdueNudgeBanner

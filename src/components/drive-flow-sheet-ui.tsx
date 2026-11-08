@@ -220,7 +220,7 @@ export function dedupeAdvisors(advisors: Advisor[]): Advisor[] {
   });
 }
 
-/** Stable, unique SelectItem value — never use display name alone (Radix keys native <option> by value). */
+/** Stable, unique SelectItem value - never use display name alone (Radix keys native <option> by value). */
 export function getAdvisorSelectValue(advisor: Advisor, index: number): string {
   if (advisor.id) return advisor.id;
   if (advisor.email) return `${advisor.storeId}::${advisor.email}`;

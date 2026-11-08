@@ -65,7 +65,7 @@ export class TeslaFleetClient {
     });
 
     if (res.status === 408) {
-      // Vehicle asleep — caller may wake and retry later
+      // Vehicle asleep - caller may wake and retry later
       return null;
     }
 

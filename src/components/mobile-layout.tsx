@@ -50,7 +50,7 @@ export default function MobileLayout(props: DashboardLayoutProps) {
   const initialTab = searchParams.get('tab') || advisor.defaultTab || 'fleet';
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction | null>(null);
-  const { firestore } = useFirebase();
+  const { firestore, isLocalDemo } = useFirebase();
 
   const shell = useDashboardShell({
     storeCode: store.code,
@@ -71,7 +71,7 @@ export default function MobileLayout(props: DashboardLayoutProps) {
       advisor.role === 'moderator' || advisor.role === 'manager' ? advisor.role : 'manager';
     setUserRole(nextRole);
     setAuthDialogOpen(false);
-    if (firestore) {
+    if (firestore && !isLocalDemo) {
       void getStoreSettingsClient(firestore, store.code).then((settings) => {
         if (settings.landOnMorningBrief) {
           shell.handleTabChange('analytics');

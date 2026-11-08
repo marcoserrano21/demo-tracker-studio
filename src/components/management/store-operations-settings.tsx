@@ -75,7 +75,7 @@ export function StoreOperationsSettings({ storeCode }: { storeCode: string }) {
           Auto check-in policy
         </CardTitle>
         <CardDescription>
-          Optional automatic check-in for overdue demos. Off by default — managers enable per store.
+          Optional automatic check-in for overdue demos. Off by default - managers enable per store.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 p-6">

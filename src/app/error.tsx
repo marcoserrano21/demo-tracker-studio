@@ -24,7 +24,7 @@ export default function Error({
       <div className="max-w-md space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
         <p className="text-sm text-muted-foreground">
-          The dashboard hit an unexpected error. Your Firestore data is unchanged — try again or return
+          The dashboard hit an unexpected error. Your Firestore data is unchanged - try again or return
           to the fleet view.
         </p>
       </div>

@@ -27,7 +27,7 @@ export function useDashboardPolicies({
   currentStore: Store | null;
   userRole: UserRole;
 }) {
-  const { firestore } = useFirebase();
+  const { firestore, isLocalDemo } = useFirebase();
   const { toast } = useToast();
   const router = useRouter();
   const [previousAchievementCount, setPreviousAchievementCount] = useState(0);
@@ -64,7 +64,8 @@ export function useDashboardPolicies({
   }, [vehicles, toast, router, currentAdvisor]);
 
   useEffect(() => {
-    if (!firestore || !vehicles.length || !currentStore || !driveLogs) return;
+    if (isLocalDemo || !firestore || !vehicles.length || !currentStore || !driveLogs) return;
+    if (userRole !== 'manager' && userRole !== 'moderator') return;
 
     const runAutoCheckIn = async () => {
       const settings = await getStoreSettingsClient(firestore, currentStore.code);
@@ -111,7 +112,7 @@ export function useDashboardPolicies({
     void runAutoCheckIn();
     const interval = setInterval(runAutoCheckIn, AUTO_CHECKIN_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [firestore, vehicles, currentStore, driveLogs]);
+  }, [firestore, vehicles, currentStore, driveLogs, userRole]);
 
   useEffect(() => {
     if (!driveLogs || !currentAdvisor || !vehicles.length) return;

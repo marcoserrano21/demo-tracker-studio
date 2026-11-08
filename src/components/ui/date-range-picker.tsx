@@ -302,7 +302,7 @@ export function DateRangePicker({
                   'ddh-rdp-months w-full',
                   'grid grid-cols-1 sm:grid-cols-2',
                   'gap-x-6 gap-y-3',
-                  /* Nav is a direct child of Months in v9 — span full row above month grids */
+                  /* Nav is a direct child of Months in v9 - span full row above month grids */
                   '[&>nav]:col-span-1 sm:[&>nav]:col-span-2',
                   '[&>nav]:row-start-1',
                   '[&>nav]:justify-self-center',
@@ -376,7 +376,7 @@ export function DateRangePicker({
                     <span className="font-medium text-foreground">
                       {format(tempDate.from, 'MMM d, yyyy')}
                     </span>
-                    <span className="ml-1 text-primary">— select end date</span>
+                    <span className="ml-1 text-primary">- select end date</span>
                   </>
                 )
               ) : (

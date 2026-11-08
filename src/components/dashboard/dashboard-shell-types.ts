@@ -18,6 +18,6 @@ export interface DashboardLayoutProps {
   onVehiclesUpdate: (vehicles: Vehicle[]) => void;
 }
 
-/** Accessible focus ring for tab panels — never remove focus entirely. */
+/** Accessible focus ring for tab panels - never remove focus entirely. */
 export const TAB_PANEL_CLASS =
   'tab-content-enter focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm';

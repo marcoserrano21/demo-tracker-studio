@@ -1,4 +1,4 @@
-/** Bounded Firestore reads — keeps dashboard listeners predictable at scale. */
+/** Bounded Firestore reads - keeps dashboard listeners predictable at scale. */
 
 export const DRIVE_LOGS_DASHBOARD_DAYS = 30;
 export const DRIVE_LOGS_DASHBOARD_LIMIT = 500;

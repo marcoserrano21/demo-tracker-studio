@@ -1,11 +1,12 @@
 import {
   doc,
   getDoc,
+  runTransaction,
   serverTimestamp,
   setDoc,
-  writeBatch,
   type Firestore,
 } from 'firebase/firestore';
+import { estimateDemoEndBattery } from '@/lib/drive-log-utils';
 import { DEFAULT_STORE_SETTINGS, type StoreSettings } from '@/lib/types';
 
 const settingsPath = (storeCode: string) => `stores/${storeCode}/settings/operations`;
@@ -68,33 +69,46 @@ export async function performAutoCheckInClient(
     `stores/${payload.storeCode}/demo_drives/${payload.driveLogId}`
   );
 
-  const [vehicleSnap, driveSnap] = await Promise.all([getDoc(vehicleRef), getDoc(driveRef)]);
-  if (!vehicleSnap.exists() || !driveSnap.exists()) {
+  try {
+    await runTransaction(firestore, async (transaction) => {
+      const vehicleSnap = await transaction.get(vehicleRef);
+      const driveSnap = await transaction.get(driveRef);
+      if (!vehicleSnap.exists() || !driveSnap.exists()) {
+        throw new Error('stale');
+      }
+
+      const vehicle = vehicleSnap.data();
+      const drive = driveSnap.data();
+      if (vehicle.status !== 'On Demo' || drive.endTime) {
+        throw new Error('skip');
+      }
+
+      const estimatedEnd = estimateDemoEndBattery(
+        typeof vehicle.batteryLevel === 'number' ? vehicle.batteryLevel : payload.startBattery,
+        { startTime: drive.startTime ?? payload.driveStartedAt },
+      );
+
+      transaction.update(vehicleRef, {
+        status: 'Available',
+        batteryLevel: estimatedEnd,
+        batterySource: 'manual',
+        currentDriveId: null,
+        driveStartedAt: null,
+        expectedDuration: null,
+      });
+      transaction.update(driveRef, {
+        endTime: serverTimestamp(),
+        endBattery: estimatedEnd,
+        advisorIn: 'System',
+        feedback: `Auto-checked in after ${settings.autoCheckInThresholdMinutes} minutes overdue`,
+        autoCheckedIn: true,
+      });
+    });
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error && error.message === 'skip') {
+      return { success: true, skipped: true };
+    }
     return { success: false };
   }
-
-  const vehicle = vehicleSnap.data();
-  const drive = driveSnap.data();
-  if (vehicle.status !== 'On Demo' || drive.endTime) {
-    return { success: true, skipped: true };
-  }
-
-  const batch = writeBatch(firestore);
-  batch.update(vehicleRef, {
-    status: 'Available',
-    batteryLevel: payload.startBattery,
-    currentDriveId: null,
-    driveStartedAt: null,
-    expectedDuration: null,
-  });
-  batch.update(driveRef, {
-    endTime: serverTimestamp(),
-    endBattery: payload.startBattery,
-    advisorIn: 'System',
-    feedback: `Auto-checked in after ${settings.autoCheckInThresholdMinutes} minutes overdue`,
-    autoCheckedIn: true,
-  });
-
-  await batch.commit();
-  return { success: true };
 }

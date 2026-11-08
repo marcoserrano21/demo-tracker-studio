@@ -9,6 +9,7 @@ import AdvisorSelectorDialog from '@/components/advisor-selector-dialog';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/dashboard-loading-skeleton';
 import { useFirebase } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { isLocalDemoClient } from '@/lib/local-demo/config';
 import { clearStoreSession, revokeManagerAccess } from '@/app/auth/actions';
 import { DDHUB_KEYS, setSessionItem, clearDdhubSession } from '@/lib/auth/session-keys';
 import { seedDemoStoreIfNeeded } from '@/lib/demo-seed';
@@ -66,12 +67,14 @@ function HomePageContent() {
   }, []);
 
   useEffect(() => {
+    if (isLocalDemoClient()) return;
     if (!isUserLoading && !user && auth) {
       initiateAnonymousSignIn(auth);
     }
   }, [isUserLoading, user, auth]);
 
   useEffect(() => {
+    if (isLocalDemoClient()) return;
     if (!firestore || !currentStore || !user) return;
     if (typeof window === 'undefined' || sessionStorage.getItem(DDHUB_KEYS.demoMode) !== 'true') return;
 
@@ -143,7 +146,7 @@ function HomePageContent() {
 
   const pageIsLoading =
     isLoading ||
-    isUserLoading ||
+    (!isLocalDemoClient() && isUserLoading) ||
     (currentStore && (areAdvisorsLoading || areVehiclesLoading || !currentAdvisor));
 
   if (pageIsLoading) {

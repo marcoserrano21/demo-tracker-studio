@@ -11,6 +11,6 @@ export const CONFIRMATION_DETAILS: Record<ConfirmationAction, { title: string; d
   },
   logout: {
     title: 'Logout?',
-    description: 'You will return to the main store selection screen — the same entry point as a first visit.',
+    description: 'You will return to the main store selection screen - the same entry point as a first visit.',
   },
 };

@@ -111,7 +111,7 @@ export function FixAttentionDialog({
         });
       }
 
-      // No open issue docs — still clear attention with an audit trail issue
+      // No open issue docs - still clear attention with an audit trail issue
       if (openIssues.length === 0) {
         const issueRef = doc(
           collection(firestore, `stores/${storeCode}/vehicles/${vehicle.id}/vehicle_issues`),

@@ -17,7 +17,9 @@ import { Switch } from './ui/switch';
 import type { Timestamp } from 'firebase/firestore';
 import { Input } from './ui/input';
 import { useFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp, writeBatch, runTransaction } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, runTransaction, writeBatch } from 'firebase/firestore';
+import { commitScheduledDriveFirestore } from '@/lib/schedule-drive-firestore';
+import { useLocalDemoStore } from '@/local-demo/store';
 import {
   Select,
   SelectContent,
@@ -82,7 +84,9 @@ export default function CheckoutSheet({
   initialPurpose,
 }: CheckoutSheetProps) {
   const { toast } = useToast();
-  const { firestore } = useFirebase();
+  const { firestore, isLocalDemo } = useFirebase();
+  const localSchedule = useLocalDemoStore((s) => s.scheduleDrive);
+  const localCheckout = useLocalDemoStore((s) => s.checkoutNow);
   const [isLoading, setIsLoading] = useState(false);
 
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | undefined>(vehicle?.id);
@@ -112,6 +116,7 @@ export default function CheckoutSheet({
   const durationOptions = useMemo(() => {
     if (isScheduled || isScheduledDriveStart) {
         return [
+            { label: '57 min (pilot avg)', value: 57 },
             { label: '40 min', value: 40 },
             { label: '24 hrs', value: 1440 },
             { label: '48 hrs', value: 2880 },
@@ -119,6 +124,7 @@ export default function CheckoutSheet({
     }
     if (purpose === 'Demo') {
         return [
+            { label: '57 min (pilot avg)', value: 57 },
             { label: '40 min', value: 40 },
             { label: '24 hrs', value: 1440 },
             { label: '48 hrs', value: 2880 },
@@ -134,7 +140,7 @@ export default function CheckoutSheet({
     return [];
   }, [purpose, isScheduled, isScheduledDriveStart])
 
-  const [duration, setDuration] = useState(40);
+  const [duration, setDuration] = useState(57);
   
   const handleScheduledChange = (checked: boolean) => {
     setIsScheduled(checked);
@@ -152,7 +158,7 @@ export default function CheckoutSheet({
             setIsScheduled(true);
             setCoPilot('');
             setSelectedVehicleId(undefined);
-            setDuration(40);
+            setDuration(57);
         } 
         // This is to start an already scheduled drive
         else if (isScheduledDriveStart && driveLog) {
@@ -167,7 +173,7 @@ export default function CheckoutSheet({
             setIsScheduled(isSchedulingNextForOnDemo);
             setCoPilot(isSchedulingNextForOnDemo ? '' : currentAdvisor.id);
             setSelectedVehicleId(vehicle.id);
-            setDuration(40);
+            setDuration(57);
             setBatteryLevel(vehicle.batteryLevel);
         }
 
@@ -189,7 +195,7 @@ export default function CheckoutSheet({
   useEffect(() => {
     // Reset duration when purpose changes unless it's a scheduled drive start
     if (!isScheduledDriveStart) {
-      if (purpose === 'Demo') setDuration(40);
+      if (purpose === 'Demo') setDuration(57);
       else if (purpose === 'Charging') setDuration(60);
       else setDuration(customDuration || 60);
     }
@@ -321,7 +327,8 @@ export default function CheckoutSheet({
   };
 
   const handleCheckout = async (formData: FormData) => {
-    if (!firestore || !selectedVehicle) return;
+    if (!selectedVehicle) return;
+    if (!isLocalDemo && !firestore) return;
   
     const advisor = resolveAdvisorName(advisors, coPilot);
     const currentPurpose = isScheduled ? 'Demo' : purpose;
@@ -381,52 +388,40 @@ export default function CheckoutSheet({
         try {
             if (!scheduledDate || !scheduledTime) throw new Error('Date and time are required for scheduling.');
             const scheduleTime = new Date(`${scheduledDate}T${scheduledTime}`);
-            
-            // Double-booking prevention: Check if this vehicle is already scheduled at this time
-            const existingSchedule = scheduledDrives.find(log => {
-                if (log.vehicleId !== selectedVehicle.id || log.endTime) return false;
-                const logTime = (log.startTime as Timestamp)?.toDate ? (log.startTime as Timestamp).toDate() : new Date(log.startTime as number | Date);
-                return Math.abs(logTime.getTime() - scheduleTime.getTime()) < 60000; // Within 1 minute
-            });
-            
-            if (existingSchedule) {
-                toast({ 
-                    variant: 'destructive', 
-                    title: 'Double Booking Prevented', 
-                    description: 'This vehicle is already scheduled for this time. Please choose a different time or vehicle.' 
-                });
-                setIsLoading(false);
-                return;
-            }
-            
-            const newLog: Omit<DriveLog, 'id'> = {
-                vehicleId: selectedVehicle.id,
-                vehicleModel: selectedVehicle.model,
-                vehicleTrim: selectedVehicle.trim,
-                vehicleVin: selectedVehicle.vin,
-                vehicleSeats: selectedVehicle.seats,
-                coPilot: advisor || '',
-                purpose: 'Scheduled',
-                startTime: scheduleTime,
-                expectedDuration: currentDuration ?? 0,
-                startBattery: selectedVehicle.batteryLevel,
-                createdAt: serverTimestamp() as Timestamp,
-                feedback: '',
-            };
+            const durationMinutes = currentDuration ?? 57;
 
-            const batch = writeBatch(firestore);
-            const newLogRef = doc(collection(firestore, `stores/${storeCode}/demo_drives`));
-            batch.set(newLogRef, newLog);
-            if (selectedVehicle.status !== 'On Demo') {
-                const vehicleRef = doc(firestore, `stores/${storeCode}/vehicles/${selectedVehicle.id}`);
-                batch.update(vehicleRef, { status: 'Scheduled' });
+            if (isLocalDemo) {
+              localSchedule({
+                vehicle: selectedVehicle,
+                scheduleTime,
+                durationMinutes,
+                coPilot: advisor || '',
+                startBattery: selectedVehicle.batteryLevel,
+              });
+            } else if (firestore) {
+              await commitScheduledDriveFirestore({
+                firestore,
+                storeCode,
+                vehicle: selectedVehicle,
+                scheduleTime,
+                durationMinutes,
+                coPilot: advisor || '',
+                startBattery: selectedVehicle.batteryLevel,
+              });
             }
-            await batch.commit();
+
+            onVehicleUpdate(
+              selectedVehicle.status !== 'On Demo'
+                ? { id: selectedVehicle.id, status: 'Scheduled' }
+                : { id: selectedVehicle.id },
+            );
             toast({ title: 'Success', description: 'Vehicle scheduled for Demo.' });
             setIsOpen(false);
         } catch (error) {
             console.error("Scheduling Error:", error);
-            toast({ variant: 'destructive', title: 'Scheduling Failed', description: 'An unexpected error occurred.' });
+            const message =
+              error instanceof Error ? error.message : 'An unexpected error occurred.';
+            toast({ variant: 'destructive', title: 'Scheduling Failed', description: message });
         } finally {
             setIsLoading(false);
         }
@@ -435,7 +430,35 @@ export default function CheckoutSheet({
 
     // --- Perform immediate checkout using a transaction ---
     try {
-        await runTransaction(firestore, async (transaction) => {
+        if (isLocalDemo) {
+          localCheckout({
+            vehicle: selectedVehicle,
+            coPilot: advisor,
+            purpose: currentPurpose as 'Demo' | 'Charging' | 'Other',
+            durationMinutes: currentDuration ?? 57,
+            battery,
+            feedback: otherPurposeDesc,
+          });
+          const status =
+            currentPurpose === 'Demo'
+              ? 'On Demo'
+              : currentPurpose === 'Charging'
+                ? 'Charging'
+                : 'On Demo';
+          onVehicleUpdate({
+            id: selectedVehicle.id,
+            status,
+            driveStartedAt: Date.now(),
+            expectedDuration: currentDuration,
+            batteryLevel: battery,
+          });
+          toast({ title: 'Success', description: `Vehicle checked out for ${currentPurpose}.` });
+          setIsOpen(false);
+          setIsLoading(false);
+          return;
+        }
+
+        await runTransaction(firestore!, async (transaction) => {
             const vehicleRef = doc(firestore, `stores/${storeCode}/vehicles/${selectedVehicle.id}`);
             const vehicleSnap = await transaction.get(vehicleRef);
 

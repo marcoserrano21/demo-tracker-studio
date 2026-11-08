@@ -46,7 +46,7 @@ interface EditDriveLogDialogProps {
   advisors: Advisor[];
   vehicles: Vehicle[];
   onUpdateLog: (updatedLog: DriveLog) => void;
-  /** Who is performing the edit — used for audit_logs.userName */
+  /** Who is performing the edit - used for audit_logs.userName */
   editorName: string;
 }
 
@@ -484,7 +484,7 @@ export function EditDriveLogDialog({
               <div>
                 <p className="text-sm font-semibold text-foreground">Sales Outcome</p>
                 <p className="text-xs text-muted-foreground">
-                  Optional at check-in — complete or correct here. Changes are audited.
+                  Optional at check-in - complete or correct here. Changes are audited.
                 </p>
               </div>
               <div className="flex items-center space-x-2">

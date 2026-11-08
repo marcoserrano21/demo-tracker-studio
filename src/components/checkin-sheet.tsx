@@ -12,6 +12,7 @@ import { Textarea } from './ui/textarea';
 import { Loader2, CheckCircle, Star, Battery, User, ShoppingBag, Sparkles, Gauge } from 'lucide-react';
 import { BatteryLevelPicker } from './battery-level-picker';
 import { useFirebase } from '@/firebase';
+import { useLocalDemoStore } from '@/local-demo/store';
 import { doc, serverTimestamp, writeBatch, collection, Timestamp } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -94,7 +95,9 @@ function KpiChoiceRow({
 
 export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = [], storeCode, driveLog, driveLogs = [], onVehicleUpdate }: CheckinSheetProps) {
   const { toast } = useToast();
-  const { firestore } = useFirebase();
+  const { firestore, isLocalDemo } = useFirebase();
+  const localCompleteCharging = useLocalDemoStore((s) => s.completeCharging);
+  const localCompleteDrive = useLocalDemoStore((s) => s.completeActiveDrive);
   const [isLoading, setIsLoading] = useState(false);
   const [endBattery, setEndBattery] = useState<number | ''>(vehicle.batteryLevel);
   const [rating, setRating] = useState<number>(0);
@@ -170,7 +173,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!firestore) {
+    if (!isLocalDemo && !firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'Unable to connect. Please refresh and try again.' });
       return;
     }
@@ -186,9 +189,18 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
         return;
       }
       const numericEndBattery = Number(currentEndBattery);
+
+      if (isLocalDemo) {
+        localCompleteCharging(vehicle.id, numericEndBattery);
+        toast({ title: 'Success', description: 'Charging completed successfully.' });
+        onVehicleUpdate({ ...vehicle, status: 'Available', batteryLevel: numericEndBattery });
+        setIsOpen(false);
+        setIsLoading(false);
+        return;
+      }
       
-      const vehicleRef = doc(firestore, `stores/${storeCode}/vehicles/${vehicle.id}`);
-      const batch = writeBatch(firestore);
+      const vehicleRef = doc(firestore!, `stores/${storeCode}/vehicles/${vehicle.id}`);
+      const batch = writeBatch(firestore!);
       batch.update(vehicleRef, {
         status: 'Available',
         batteryLevel: numericEndBattery,
@@ -256,7 +268,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
     }
 
     const isDemoPurpose = activeDriveLog.purpose === 'Demo';
-    // Sales Outcome is optional at check-in — blank purchase / FSD-sub is allowed.
+    // Sales Outcome is optional at check-in - blank purchase / FSD-sub is allowed.
     const fsdSubAnswer: FsdSubscriptionAnswer | '' = fsdSubscriptionAttached || (fsdFromKeywords ? 'Y' : '');
     const purchased = (customerPurchased || fsdSubAnswer === 'Y' || fsdFromKeywords) && isDemoPurpose;
     const fsdSubscribed = isDemoPurpose && (fsdSubAnswer === 'Y' || fsdFromKeywords);
@@ -282,11 +294,6 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
         expectedDuration: undefined,
     };
     onVehicleUpdate(optimisticVehicleUpdate);
-    
-    const vehicleRef = doc(firestore, `stores/${storeCode}/vehicles/${vehicle.id}`);
-    const driveLogRef = doc(firestore, `stores/${storeCode}/demo_drives/${activeDriveLog.id}`);
-
-    const batch = writeBatch(firestore);
 
     const vehicleUpdateData: any = {
         status: newStatus,
@@ -296,8 +303,6 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
         driveStartedAt: null,
         expectedDuration: null,
     };
-    batch.update(vehicleRef, vehicleUpdateData);
-
     const driveLogUpdateData: any = {
         endTime: serverTimestamp(),
         endBattery: numericEndBattery,
@@ -328,8 +333,44 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
     }
 
     if (fsdSubscribed) {
-        driveLogUpdateData.fsdSubscribed = true;
-        const fsdOrderRef = doc(collection(firestore, `stores/${storeCode}/fsd_orders`));
+      driveLogUpdateData.fsdSubscribed = true;
+    }
+
+    if (isLocalDemo) {
+      localCompleteDrive({
+        vehicle,
+        driveLogId: activeDriveLog.id,
+        vehiclePatch: {
+          status: newStatus,
+          batteryLevel: numericEndBattery,
+          batterySource: 'manual',
+          currentDriveId: undefined,
+          driveStartedAt: undefined,
+          expectedDuration: undefined,
+        },
+        drivePatch: {
+          ...driveLogUpdateData,
+          endTime: Timestamp.now(),
+        },
+      });
+      setIsOpen(false);
+      toast({
+        title: 'Drive logged',
+        description: 'Fleet updated. FSD logged.',
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const vehicleRef = doc(firestore!, `stores/${storeCode}/vehicles/${vehicle.id}`);
+    const driveLogRef = doc(firestore!, `stores/${storeCode}/demo_drives/${activeDriveLog.id}`);
+
+    const batch = writeBatch(firestore!);
+
+    batch.update(vehicleRef, vehicleUpdateData);
+
+    if (fsdSubscribed) {
+        const fsdOrderRef = doc(collection(firestore!, `stores/${storeCode}/fsd_orders`));
         const creditedAdvisor = advisors.find(a => a.name === (activeDriveLog.coPilot || advisor));
         batch.set(fsdOrderRef, {
             storeId: storeCode,
@@ -346,11 +387,11 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
         });
     }
 
-    // Lightweight CRM outcome (no PII) — only when purchase / FSD-sub are set at check-in.
+    // Lightweight CRM outcome (no PII) - only when purchase / FSD-sub are set at check-in.
     // FSD activated alone does not create an outcome (it is always true for demos).
     // Advisors can complete outcomes later via History → Edit; that path upserts + audits.
     if (isDemoPurpose && (purchased || fsdSubscribed)) {
-        const outcomeRef = doc(collection(firestore, `stores/${storeCode}/demo_outcomes`));
+        const outcomeRef = doc(collection(firestore!, `stores/${storeCode}/demo_outcomes`));
         batch.set(outcomeRef, {
             storeId: storeCode,
             driveLogId: activeDriveLog.id,
@@ -371,7 +412,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
 
     let newIssueRefPath: string | undefined;
     if (issueDetected) {
-        const newIssueRef = doc(collection(firestore, `stores/${storeCode}/vehicles/${vehicle.id}/vehicle_issues`));
+        const newIssueRef = doc(collection(firestore!, `stores/${storeCode}/vehicles/${vehicle.id}/vehicle_issues`));
         newIssueRefPath = newIssueRef.path;
         const newIssue: Omit<VehicleIssue, 'id' | 'resolutionNotes' | 'resolutionDate'> = {
             description: feedback,
@@ -499,7 +540,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
                   <DriveFlowFieldHeader
                     icon={Star}
                     title="Feedback & issues"
-                    hint="Optional but encouraged — keywords auto-flag maintenance · +XP for quality notes"
+                    hint="Optional but encouraged - keywords auto-flag maintenance · +XP for quality notes"
                   />
                   <Textarea
                     name="feedback"
@@ -511,7 +552,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
                   {fsdDetectedFromFeedback && (
                     <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                       <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      FSD subscription detected from feedback — set to Y
+                      FSD subscription detected from feedback - set to Y
                     </p>
                   )}
                 </DriveFlowSection>
@@ -567,7 +608,7 @@ export default function CheckinSheet({ isOpen, setIsOpen, vehicle, advisors = []
                   <DriveFlowFieldHeader
                     icon={ShoppingBag}
                     title="Sales outcome"
-                    hint="Optional — purchase + FSD-sub can be filled now or later in History"
+                    hint="Optional - purchase + FSD-sub can be filled now or later in History"
                   />
                   <div className="space-y-4">
                     {fleetFsdHint && (

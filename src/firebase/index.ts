@@ -2,6 +2,8 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
+import { assertLocalDemoDoesNotUseProductionFirebase } from '@/lib/firebase-project-guard';
+import { isLocalDemoClient } from '@/lib/local-demo/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -9,6 +11,11 @@ import { getStorage } from 'firebase/storage';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
+  assertLocalDemoDoesNotUseProductionFirebase(
+    firebaseConfig.projectId,
+    isLocalDemoClient(),
+  );
+
   if (!getApps().length) {
     // CRITICAL: Always use our explicit config to ensure correct project
     // This ensures both localhost AND deployed site connect to the same database

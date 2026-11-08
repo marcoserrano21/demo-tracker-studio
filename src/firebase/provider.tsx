@@ -5,7 +5,9 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { useLocalDemoContext } from '@/local-demo/LocalDemoProvider';
+import { isLocalDemoClient } from '@/lib/local-demo/config';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -44,6 +46,8 @@ export interface FirebaseServicesAndUser {
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
+  /** In-memory leadership demo - Firestore writes are routed through the local store. */
+  isLocalDemo?: boolean;
 }
 
 // Return type for useUser() - specific to user auth state
@@ -122,7 +126,21 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
  * Throws error if core services are not available or used outside provider.
  */
 export const useFirebase = (): FirebaseServicesAndUser => {
+  const localDemo = useLocalDemoContext();
   const context = useContext(FirebaseContext);
+
+  if (localDemo?.active && isLocalDemoClient()) {
+    return {
+      firebaseApp: null as unknown as FirebaseApp,
+      firestore: null as unknown as Firestore,
+      auth: null as unknown as Auth,
+      storage: null as unknown as FirebaseStorage,
+      user: localDemo.user,
+      isUserLoading: false,
+      userError: null,
+      isLocalDemo: true,
+    };
+  }
 
   if (context === undefined) {
     throw new Error('useFirebase must be used within a FirebaseProvider.');
@@ -140,6 +158,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
     user: context.user,
     isUserLoading: context.isUserLoading,
     userError: context.userError,
+    isLocalDemo: false,
   };
 };
 

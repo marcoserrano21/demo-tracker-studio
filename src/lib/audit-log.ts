@@ -23,7 +23,7 @@ type WriteAuditLogParams = {
   targetType: AuditLog['details']['targetType'];
   description: string;
   changes?: AuditChange[];
-  /** Optional batch — when provided, audit doc is queued on the batch instead of written immediately. */
+  /** Optional batch - when provided, audit doc is queued on the batch instead of written immediately. */
   batch?: WriteBatch;
 };
 

@@ -9,6 +9,7 @@ import {
   type StoreCompareKpis,
 } from '@/lib/ops-reports';
 import { useRegionalPeers } from '@/hooks/use-regional-peers';
+import { shouldUseLocalDatastore } from '@/lib/local-demo/config';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
@@ -122,7 +123,8 @@ export default function RegionalLite({
   }, [peerA, peerB]);
 
   const peerCodes = useMemo(() => selectedPeers.map((p) => p.code), [selectedPeers]);
-  const { data: livePeers, loading: peersLoading } = useRegionalPeers(peerCodes);
+  const skipLivePeers = shouldUseLocalDatastore();
+  const { data: livePeers, loading: peersLoading } = useRegionalPeers(skipLivePeers ? [] : peerCodes);
 
   const rows = useMemo(() => {
     const current = buildStoreCompareKpis({

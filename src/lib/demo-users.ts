@@ -1,6 +1,6 @@
 import type { Advisor } from '@/lib/types';
 
-/** Portfolio owner — kept in demo seed for manager-access walkthroughs. */
+/** Portfolio owner - kept in demo seed for manager-access walkthroughs. */
 export const DEMO_MANAGER_ADVISOR_NAME = 'Marco Serrano';
 
 /** Max 5 rotating guest identities for Try Demo (no manager access). */

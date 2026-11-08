@@ -904,7 +904,7 @@
   animation: none;
 }
 
-/* Date range picker — v9 places Nav as first child of Months (sibling to Month grids) */
+/* Date range picker - v9 places Nav as first child of Months (sibling to Month grids) */
 .ddh-day-picker .rdp-months > nav,
 .ddh-rdp-months > nav {
   display: flex !important;

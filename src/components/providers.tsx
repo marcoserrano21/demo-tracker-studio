@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { ThemeProvider } from '@/components/theme-provider';
-import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
+import { LocalDemoProvider } from '@/local-demo/LocalDemoProvider';
+import { isLocalDemoClient } from '@/lib/local-demo/config';
 
 function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -21,12 +22,13 @@ function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Toaster />
-      <PWAInstallPrompt />
     </>
   );
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const useLocal = isLocalDemoClient();
+
   return (
     <ThemeProvider
       attribute="class"
@@ -35,9 +37,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
       themes={['light', 'dark', 'high-contrast']}
     >
-      <FirebaseClientProvider>
-        <AppShell>{children}</AppShell>
-      </FirebaseClientProvider>
+      {useLocal ? (
+        <LocalDemoProvider>
+          <AppShell>{children}</AppShell>
+        </LocalDemoProvider>
+      ) : (
+        <FirebaseClientProvider>
+          <AppShell>{children}</AppShell>
+        </FirebaseClientProvider>
+      )}
     </ThemeProvider>
   );
 }

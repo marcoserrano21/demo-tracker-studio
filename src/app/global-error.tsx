@@ -24,7 +24,7 @@ export default function GlobalError({
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Demo Drive Hub is unavailable</h1>
           <p className="max-w-md text-sm text-muted-foreground">
-            A critical error occurred — often a Firestore permission mismatch after signing in to a
+            A critical error occurred - often a Firestore permission mismatch after signing in to a
             different store. Sign out, pick your store again, and retry.
           </p>
           <Button type="button" onClick={() => reset()}>

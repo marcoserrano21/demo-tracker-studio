@@ -9,6 +9,8 @@ import FloorMode from '@/components/floor-mode';
 import { TabContentLoader } from '@/components/dashboard/tab-content-loader';
 import { TAB_PANEL_CLASS, type DashboardLayoutProps } from '@/components/dashboard/dashboard-shell-types';
 import { isElevatedUserRole } from '@/lib/demo-users';
+import { isPortfolioDemoStore } from '@/lib/demo-store';
+import { shouldUseLocalDatastore } from '@/lib/local-demo/config';
 
 const History = lazy(() => import('@/components/history'));
 const AnalyticsDashboard = lazy(() => import('@/components/analytics-dashboard'));
@@ -50,6 +52,8 @@ export function DashboardTabPanels({
   onNavigateTab,
 }: TabPanelsProps) {
   const logsReady = !driveLogsLoading;
+  const showFloorOnFleet =
+    shouldUseLocalDatastore() || isPortfolioDemoStore(store.code);
 
   return (
     <>
@@ -71,19 +75,32 @@ export function DashboardTabPanels({
       </TabsContent>
 
       <TabsContent className={TAB_PANEL_CLASS} value="fleet">
-        <VehicleGrid
-          vehicles={vehicles}
-          advisors={advisors}
-          currentAdvisor={advisor}
-          storeCode={store.code}
-          userRole={userRole}
-          driveLogs={driveLogs}
-          onVehicleUpdate={onVehicleUpdate}
-          storeName={store.name}
-          advisorName={advisor.name.split(' ')[0]}
-          isMobile={isMobile}
-          onNavigateTab={onNavigateTab}
-        />
+        {showFloorOnFleet ? (
+          <FloorMode
+            vehicles={vehicles}
+            advisors={advisors}
+            currentAdvisor={advisor}
+            storeCode={store.code}
+            userRole={userRole}
+            driveLogs={driveLogs}
+            onVehicleUpdate={onVehicleUpdate}
+            onNavigateTab={onNavigateTab}
+          />
+        ) : (
+          <VehicleGrid
+            vehicles={vehicles}
+            advisors={advisors}
+            currentAdvisor={advisor}
+            storeCode={store.code}
+            userRole={userRole}
+            driveLogs={driveLogs}
+            onVehicleUpdate={onVehicleUpdate}
+            storeName={store.name}
+            advisorName={advisor.name.split(' ')[0]}
+            isMobile={isMobile}
+            onNavigateTab={onNavigateTab}
+          />
+        )}
       </TabsContent>
 
       <TabsContent className={TAB_PANEL_CLASS} value="finish">

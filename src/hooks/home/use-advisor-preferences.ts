@@ -38,7 +38,7 @@ export function useAdvisorPreferences(advisor: Advisor | null) {
     setSessionItem(DDHUB_KEYS.advisorProfile, JSON.stringify(mergeSessionTheme(advisor)));
   }, [advisor]);
 
-  // Re-apply presentation only when visual prefs change — not on XP / fleet churn
+  // Re-apply presentation only when visual prefs change - not on XP / fleet churn
   useEffect(() => {
     const current = advisorRef.current;
     if (!current) return;

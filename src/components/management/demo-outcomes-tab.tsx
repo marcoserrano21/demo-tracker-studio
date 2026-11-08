@@ -28,7 +28,7 @@ function createdAtDate(record: DemoOutcomeRecord): Date {
   return new Date(v);
 }
 
-/** Lightweight CRM read-out — soft labels only, no customer PII. */
+/** Lightweight CRM read-out - soft labels only, no customer PII. */
 export function DemoOutcomesTab({ storeCode }: DemoOutcomesTabProps) {
   const { firestore } = useFirebase();
 
@@ -62,7 +62,7 @@ export function DemoOutcomesTab({ storeCode }: DemoOutcomesTabProps) {
           Demo outcomes
         </CardTitle>
         <CardDescription className="mt-1.5 text-sm">
-          Soft CRM hook from check-in — vehicle + advisor labels only. No customer names or contact info.
+          Soft CRM hook from check-in - vehicle + advisor labels only. No customer names or contact info.
         </CardDescription>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           <Badge variant="secondary">{sorted.length} outcomes</Badge>

@@ -31,7 +31,7 @@ const DEMO_ADVISOR_NAMES = [
 
 const FEEDBACK_SAMPLES = [
   'Customer loved the acceleration and one-pedal driving.',
-  'Great demo — they are comparing trims this weekend. FSD subscribed.',
+  'Great demo - they are comparing trims this weekend. FSD subscribed.',
   'Smooth highway merge impressed the family.',
   'Charging stop went well; customer asked about home install. Full self-driving attached.',
   'Quiet cabin and screen UX were the highlights.',

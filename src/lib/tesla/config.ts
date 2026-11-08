@@ -1,6 +1,6 @@
 /**
  * Tesla Fleet API env config.
- * Leave unset until partner approval — the app falls back to manual battery entry.
+ * Leave unset until partner approval - the app falls back to manual battery entry.
  */
 
 export interface TeslaFleetConfig {

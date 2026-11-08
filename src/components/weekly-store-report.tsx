@@ -77,7 +77,7 @@ export default function WeeklyStoreReport({
       link.download = `weekly-report_${storeCode}_${report.periodStart.toISOString().slice(0, 10)}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-      toast({ title: 'Report exported', description: 'PNG downloaded — ready to forward.' });
+      toast({ title: 'Report exported', description: 'PNG downloaded - ready to forward.' });
     } catch {
       toast({ variant: 'destructive', title: 'Export failed', description: 'Could not generate PNG.' });
     } finally {
@@ -92,7 +92,7 @@ export default function WeeklyStoreReport({
       const article = reportRef.current;
       const printWin = window.open('', '_blank', 'noopener,noreferrer,width=800,height=900');
       if (!printWin) {
-        // Popup blocked — fall back to in-page print of the article
+        // Popup blocked - fall back to in-page print of the article
         article.classList.add('weekly-report-print-root');
         const style = document.createElement('style');
         style.id = 'weekly-report-print-style';
@@ -192,7 +192,7 @@ export default function WeeklyStoreReport({
         toast({ title: 'Weekly summary', description: summary });
       }
     } catch {
-      // user cancelled share — ignore
+      // user cancelled share - ignore
     } finally {
       setBusy(null);
     }

@@ -245,10 +245,10 @@ function FloorVehicleRow({
                 : primaryAction.kind === 'fix'
                   ? 'destructive'
                   : primaryAction.disabled
-                    ? 'destructive'
+                    ? 'secondary'
                     : 'default'
             }
-            className="h-12 w-full rounded-xl text-base font-semibold"
+            className="h-12 min-h-[44px] w-full rounded-xl text-base font-semibold"
             disabled={primaryAction.disabled}
             onClick={onPrimary}
           >
@@ -358,7 +358,7 @@ export default function FloorMode({
           </h2>
           <p className="text-sm text-muted-foreground">
             {finishOnly
-              ? 'One tap to Finish — log FSD and update the fleet.'
+              ? 'One tap to Finish - log FSD and update the fleet.'
               : 'Available first. One action per vehicle.'}
           </p>
         </div>

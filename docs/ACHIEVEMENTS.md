@@ -99,5 +99,5 @@ These are the rarest and toughest achievements, reserved for the most dedicated 
 -   **The Architect**: Your feedback directly led to an improvement or new feature in the Hub. This is manually awarded.
 -   **Clairvoyant**: Be the first person at your store to drive a new model or trim on the day it's added to the fleet.
 -   **Current Keeper**: Played it safe by taking a vehicle for charging when its battery was still above 70%.
--   **Goldilocks Driver**: Your average drive time was *just right*—between 40 and 70 minutes for a whole month.
+-   **Goldilocks Driver**: Your average drive time was *just right*-between 40 and 70 minutes for a whole month.
 -   **Hub Master**: The ultimate prize. You've earned every single non-secret achievement in the Hub.

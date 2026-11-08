@@ -9,7 +9,7 @@ interface HubLogoProps {
   showSubtitle?: boolean;
 }
 
-/** Bold Demo Drive Hub mark — filled shapes for small-size legibility. */
+/** Bold Demo Drive Hub mark - filled shapes for small-size legibility. */
 function HubMark({ className }: { className?: string }) {
   return (
     <svg
@@ -19,7 +19,7 @@ function HubMark({ className }: { className?: string }) {
       className={className}
       aria-hidden
     >
-      {/* Hub pulse — real-time fleet tracking */}
+      {/* Hub pulse - real-time fleet tracking */}
       <circle
         cx="12"
         cy="6.5"
@@ -29,7 +29,7 @@ function HubMark({ className }: { className?: string }) {
         opacity="0.4"
       />
       <circle cx="12" cy="6.5" r="2" fill="currentColor" />
-      {/* Vehicle — solid silhouette */}
+      {/* Vehicle - solid silhouette */}
       <path
         fill="currentColor"
         d="M5 14.5h14l-1.2-3.4A2 2 0 0 0 15.9 9.75H8.1a2 2 0 0 0-1.9 1.35L5 14.5Zm-1.25 0h16.5c.41 0 .75.34.75.75v1.25c0 .69-.56 1.25-1.25 1.25h-.85a2 2 0 0 1-3.9 0H8.5a2 2 0 0 1-3.9 0h-.85c-.69 0-1.25-.56-1.25-1.25V15.25c0-.41.34-.75.75-.75Z"
@@ -48,7 +48,7 @@ export function HubLogo({ expanded = false, className, showSubtitle = false }: H
         expanded ? 'gap-2 px-1' : 'gap-0 justify-center',
         className
       )}
-      aria-label={`Demo Drive Hub — ${PRODUCT_SUBTITLE}`}
+      aria-label={`Demo Drive Hub - ${PRODUCT_SUBTITLE}`}
     >
       <div
         className={cn(

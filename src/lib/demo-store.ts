@@ -1,4 +1,4 @@
-/** Portfolio one-click Demo Store — isolated from real showroom store codes. */
+/** Portfolio one-click Demo Store - isolated from real showroom store codes. */
 export const DEMO_STORE_CODE = 'demo-hub';
 export const DEMO_STORE_NAME = 'Demo Store';
 export const DEMO_REGION_CODE = 'demo';
