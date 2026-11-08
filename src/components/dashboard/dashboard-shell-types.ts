@@ -16,6 +16,7 @@ export interface DashboardLayoutProps {
   todaysScheduledDrivesCount: number;
   onAdvisorsUpdate: (advisors: Advisor[]) => void;
   onVehiclesUpdate: (vehicles: Vehicle[]) => void;
+  onAdvisorPatch?: (patch: Partial<Advisor>) => void;
 }
 
 /** Accessible focus ring for tab panels - never remove focus entirely. */

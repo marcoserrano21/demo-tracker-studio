@@ -18,6 +18,7 @@ import { useStoreData } from '@/hooks/home/use-store-data';
 import { useAdvisorSession } from '@/hooks/home/use-advisor-session';
 import { useAdvisorPreferences } from '@/hooks/home/use-advisor-preferences';
 import { useDashboardPolicies } from '@/hooks/home/use-dashboard-policies';
+import { useLocalDemoStore } from '@/local-demo/store';
 
 function HomePageContent() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
@@ -144,6 +145,16 @@ function HomePageContent() {
     }
   };
 
+  const handleAdvisorPatch = useCallback((patch: Partial<Advisor>) => {
+    setCurrentAdvisor((prev) => {
+      if (!prev) return prev;
+      if (isLocalDemoClient()) {
+        useLocalDemoStore.getState().patchAdvisor(prev.id, patch);
+      }
+      return { ...prev, ...patch };
+    });
+  }, []);
+
   const pageIsLoading =
     isLoading ||
     (!isLocalDemoClient() && isUserLoading) ||
@@ -187,6 +198,7 @@ function HomePageContent() {
             todaysScheduledDrivesCount={todaysScheduledDrivesCount}
             onAdvisorsUpdate={handleAdvisorUpdate}
             onVehiclesUpdate={setVehicles}
+            onAdvisorPatch={handleAdvisorPatch}
           />
           <AdvisorSelectorDialog
             isOpen={isAdvisorDialogOpen}

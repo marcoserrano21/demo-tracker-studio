@@ -20,8 +20,6 @@ import { vehicleOptions, getExteriorColorsForVehicle, getInteriorColorsForVehicl
 import { cn } from '@/lib/utils';
 import { useFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { shouldUseLocalDatastore } from '@/lib/local-demo/config';
-import { useLocalDemoStore } from '@/local-demo/store';
 import { Table, TableBody, TableHeader, TableRow, TableHead } from './ui/table';
 import VehicleCarousel from './vehicle-carousel';
 import { FleetAttentionStrip } from './fleet-attention-strip';
@@ -44,7 +42,15 @@ interface VehicleGridProps {
   advisorName: string;
   isMobile: boolean | undefined;
   onNavigateTab?: (tab: string) => void;
+  onAdvisorPatch?: (patch: Partial<Advisor>) => void;
 }
+
+const FLEET_VIEW_OPTIONS: { value: FleetView; label: string; icon: typeof LayoutGrid }[] = [
+  { value: 'grid', label: 'Grid', icon: LayoutGrid },
+  { value: 'compact', label: 'Compact', icon: View },
+  { value: 'list', label: 'List', icon: LayoutList },
+  { value: 'carousel', label: 'Carousel', icon: RectangleHorizontal },
+];
 
 const modelOrder: VehicleModel[] = ['Model S', 'Model 3', 'Model X', 'Model Y', 'Cybertruck', 'Roadster'];
 const statusOptions: (VehicleStatus | 'All')[] = ['All', 'Available', 'On Demo', 'Charging', 'Scheduled', 'Needs Attention'];
@@ -60,7 +66,7 @@ const trimOrder: Record<VehicleModel, string[]> = {
     'Roadster': ["Founder's Series"],
 };
 
-export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeCode, userRole, driveLogs, onVehicleUpdate, storeName, advisorName, isMobile, onNavigateTab }: VehicleGridProps) {
+export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeCode, userRole, driveLogs, onVehicleUpdate, storeName, advisorName, isMobile, onNavigateTab, onAdvisorPatch }: VehicleGridProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'All'>('All');
     const [sortKey, setSortKey] = useState<SortKey>(currentAdvisor.defaultSortOrder || 'model');
@@ -73,38 +79,30 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     const [attentionFilter, setAttentionFilter] = useState<AttentionFilter>(null);
     const [chargeVehicle, setChargeVehicle] = useState<Vehicle | null>(null);
     
-    const { firestore } = useFirebase();
-    const patchLocalAdvisor = useLocalDemoStore((s) => s.patchAdvisor);
-    const useLocalDatastore = shouldUseLocalDatastore();
+    const { firestore, isLocalDemo } = useFirebase();
 
     useEffect(() => {
         setSortKey(currentAdvisor.defaultSortOrder || 'model');
-        setFleetView(currentAdvisor.fleetView || 'grid');
-    }, [currentAdvisor]);
+        setFleetView(currentAdvisor.fleetView ?? 'grid');
+    }, [currentAdvisor.id, currentAdvisor.fleetView, currentAdvisor.defaultSortOrder]);
 
+    const persistAdvisorFields = (patch: Partial<Advisor>) => {
+        onAdvisorPatch?.(patch);
+        if (isLocalDemo) return;
+        if (firestore) {
+            const advisorRef = doc(firestore, `stores/${storeCode}/advisors/${currentAdvisor.id}`);
+            updateDocumentNonBlocking(advisorRef, patch);
+        }
+    };
 
     const handleFleetViewChange = (view: FleetView) => {
         setFleetView(view);
-        if (useLocalDatastore) {
-            patchLocalAdvisor(currentAdvisor.id, { fleetView: view });
-            return;
-        }
-        if (firestore) {
-            const advisorRef = doc(firestore, `stores/${storeCode}/advisors/${currentAdvisor.id}`);
-            updateDocumentNonBlocking(advisorRef, { fleetView: view });
-        }
+        persistAdvisorFields({ fleetView: view });
     };
 
     const handleSortKeyChange = (value: SortKey) => {
         setSortKey(value);
-        if (useLocalDatastore) {
-            patchLocalAdvisor(currentAdvisor.id, { defaultSortOrder: value });
-            return;
-        }
-        if (firestore) {
-            const advisorRef = doc(firestore, `stores/${storeCode}/advisors/${currentAdvisor.id}`);
-            updateDocumentNonBlocking(advisorRef, { defaultSortOrder: value });
-        }
+        persistAdvisorFields({ defaultSortOrder: value });
     };
 
     const filterOptions = useMemo(() => {
@@ -247,9 +245,13 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
     }, [vehicles, searchTerm, statusFilter, sortKey, trimFilter, exteriorColorFilter, interiorColorFilter, wheelFilter, driveLogs, attentionFilter]);
     
     const gridUlClass = cn(
-        "grid grid-cols-1 gap-4 sm:gap-6",
-        { 'card-list blur-effect': currentAdvisor.cardHoverEffect === 'blur' && (fleetView === 'grid' || fleetView === 'compact') },
-        fleetView === 'grid' ? 'sm:grid-cols-2 lg:grid-cols-3' : 'sm:grid-cols-1 lg:grid-cols-2'
+        'grid grid-cols-1 gap-4 sm:gap-6',
+        {
+            'card-list blur-effect':
+                currentAdvisor.cardHoverEffect === 'blur' && (fleetView === 'grid' || fleetView === 'compact'),
+        },
+        fleetView === 'grid' && 'sm:grid-cols-2 lg:grid-cols-3',
+        fleetView === 'compact' && 'sm:grid-cols-2 lg:grid-cols-2',
     );
 
     const renderGrid = () => (
@@ -371,16 +373,31 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                 initialPurpose="Charging"
               />
             )}
+            <div
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/30 p-2"
+              role="toolbar"
+              aria-label="Fleet layout"
+            >
+              <span className="text-sm font-medium text-muted-foreground px-1">Layout</span>
+              <div className="flex flex-wrap items-center gap-1">
+                {FLEET_VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
+                  <Button
+                    key={value}
+                    type="button"
+                    variant={fleetView === value ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="h-9 gap-1.5 px-2.5"
+                    onClick={() => handleFleetViewChange(value)}
+                    aria-label={`${label} view`}
+                    aria-pressed={fleetView === value}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                    <span className="text-xs font-medium">{label}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
             <div className="flex flex-col gap-3 md:flex-row md:gap-4 md:justify-between">
-                <div className="flex items-center justify-between gap-2 md:hidden">
-                    <span className="text-sm font-medium text-muted-foreground">Fleet view</span>
-                    <div className="flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 p-0.5">
-                        <Button variant={fleetView === 'grid' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('grid')} aria-label="Grid view"><LayoutGrid className="h-4 w-4" /></Button>
-                        <Button variant={fleetView === 'compact' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('compact')} aria-label="Compact view"><View className="h-4 w-4" /></Button>
-                        <Button variant={fleetView === 'list' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('list')} aria-label="List view"><LayoutList className="h-4 w-4" /></Button>
-                        <Button variant={fleetView === 'carousel' ? 'secondary' : 'ghost'} size="icon" className="h-9 w-9" onClick={() => handleFleetViewChange('carousel')} aria-label="Carousel view"><RectangleHorizontal className="h-4 w-4" /></Button>
-                    </div>
-                </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                     <div className="relative w-full sm:w-auto md:flex-1 md:max-w-xs">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -482,12 +499,6 @@ export default function VehicleGrid({ vehicles, advisors, currentAdvisor, storeC
                             Reset
                         </Button>
                     )}
-                </div>
-                <div className="hidden md:flex items-center gap-2">
-                    <Button variant={fleetView === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('grid')} aria-label="Grid view"><LayoutGrid /></Button>
-                    <Button variant={fleetView === 'compact' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('compact')} aria-label="Compact view"><View /></Button>
-                    <Button variant={fleetView === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('list')} aria-label="List view"><LayoutList /></Button>
-                    <Button variant={fleetView === 'carousel' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleFleetViewChange('carousel')} aria-label="Carousel view"><RectangleHorizontal /></Button>
                 </div>
             </div>
 

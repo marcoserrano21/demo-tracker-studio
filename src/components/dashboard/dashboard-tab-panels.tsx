@@ -46,6 +46,7 @@ export function DashboardTabPanels({
   onLogUpdate,
   onAdvisorsUpdate,
   onVehiclesUpdate,
+  onAdvisorPatch,
   isMobile = false,
   onNavigateTab,
 }: TabPanelsProps) {
@@ -83,6 +84,7 @@ export function DashboardTabPanels({
           advisorName={advisor.name.split(' ')[0]}
           isMobile={isMobile}
           onNavigateTab={onNavigateTab}
+          onAdvisorPatch={onAdvisorPatch}
         />
       </TabsContent>
 
