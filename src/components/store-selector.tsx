@@ -82,7 +82,10 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
       const result = await invokeServerAction(tryDemoStoreAccess);
       if (result.success && result.storeCode) {
         setSessionItem(DDHUB_KEYS.demoMode, 'true');
-        toast({ title: 'Demo ready', description: 'Pick an advisor, then tap Start on an available vehicle in Floor Mode.' });
+        toast({
+          title: 'Demo ready',
+          description: 'Pick an advisor, then use Find: Grid, Compact, List, or Carousel above the fleet.',
+        });
         onStoreSelect(result.storeCode, { demo: true });
       } else {
         toast({

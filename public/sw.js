@@ -1,8 +1,8 @@
 // Service Worker for PWA - Enhanced Offline Support
-const CACHE_NAME = 'demo-drive-hub-v3';
+const CACHE_NAME = 'demo-drive-hub-v4';
 const OFFLINE_URL = '/offline.html';
-const RUNTIME_CACHE = 'demo-drive-hub-runtime-v3';
-const IMAGE_CACHE = 'demo-drive-hub-images-v3';
+const RUNTIME_CACHE = 'demo-drive-hub-runtime-v4';
+const IMAGE_CACHE = 'demo-drive-hub-images-v4';
 
 // Assets to cache immediately
 const urlsToCache = [
