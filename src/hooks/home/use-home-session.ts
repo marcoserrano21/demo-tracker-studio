@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { getSessionAccess } from '@/app/auth/actions';
 import { invokeServerAction } from '@/lib/server-action-client';
-import { stores as allStores } from '@/lib/data';
+import { resolveStoreByCode } from '@/lib/data';
 import type { Store, UserRole } from '@/lib/types';
-import { DDHUB_KEYS, clearDdhubSession, getSessionItem } from '@/lib/auth/session-keys';
+import { DDHUB_KEYS, clearDdhubSession, getSessionItem, setSessionItem } from '@/lib/auth/session-keys';
 
 export function useHomeSession() {
   const [currentStore, setCurrentStore] = useState<Store | null>(null);
@@ -18,11 +18,17 @@ export function useHomeSession() {
         const serverSession = await invokeServerAction(getSessionAccess);
         const savedStoreCode = getSessionItem(DDHUB_KEYS.store);
 
-        if (savedStoreCode && serverSession.storeCode === savedStoreCode) {
-          const storeData = allStores.find((s) => s.code === savedStoreCode);
-          if (storeData) {
-            setCurrentStore(storeData as Store);
+        const effectiveCode = serverSession.storeCode ?? savedStoreCode;
+        if (effectiveCode) {
+          const storeData = resolveStoreByCode(effectiveCode);
+          if (storeData && (!savedStoreCode || savedStoreCode === effectiveCode)) {
+            if (!savedStoreCode) {
+              setSessionItem(DDHUB_KEYS.store, effectiveCode);
+            }
+            setCurrentStore({ ...storeData, advisors: [], vehicles: [] } as Store);
             setUserRole(serverSession.isManager ? 'manager' : 'advisor');
+          } else if (savedStoreCode && !serverSession.storeCode) {
+            clearDdhubSession();
           }
         } else if (savedStoreCode && !serverSession.storeCode) {
           clearDdhubSession();

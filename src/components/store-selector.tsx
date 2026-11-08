@@ -19,7 +19,7 @@ import { Loader2, Sparkles, ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface StoreSelectorProps {
-  onStoreSelect: (storeCode: string, options?: { demo?: boolean }) => void;
+  onStoreSelect: (storeCode: string, options?: { demo?: boolean }) => boolean;
 }
 
 export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
@@ -57,7 +57,14 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
       );
       if (result.success) {
         removeSessionItem(DDHUB_KEYS.demoMode);
-        onStoreSelect(selectedStore);
+        const entered = onStoreSelect(selectedStore);
+        if (!entered) {
+          toast({
+            title: 'Error',
+            description: 'That store could not be opened. Refresh and try again.',
+            variant: 'destructive',
+          });
+        }
       } else {
         toast({
           title: 'Error',
@@ -82,11 +89,20 @@ export default function StoreSelector({ onStoreSelect }: StoreSelectorProps) {
       const result = await invokeServerAction(tryDemoStoreAccess);
       if (result.success && result.storeCode) {
         setSessionItem(DDHUB_KEYS.demoMode, 'true');
-        toast({
-          title: 'Demo ready',
-          description: 'Pick an advisor, then use Find: Grid, Compact, List, or Carousel above the fleet.',
-        });
-        onStoreSelect(result.storeCode, { demo: true });
+        const entered = onStoreSelect(result.storeCode, { demo: true });
+        if (entered) {
+          toast({
+            title: 'Demo ready',
+            description: 'Pick an advisor, then use Find: Grid, Compact, List, or Carousel above the fleet.',
+          });
+        } else {
+          removeSessionItem(DDHUB_KEYS.demoMode);
+          toast({
+            title: 'Demo unavailable',
+            description: 'Could not open the demo store. Refresh and try again.',
+            variant: 'destructive',
+          });
+        }
       } else {
         toast({
           title: 'Demo unavailable',

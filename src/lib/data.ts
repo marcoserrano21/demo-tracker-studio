@@ -1,6 +1,7 @@
 
 
 import type { Store, StoreInfo, DriveLog, Vehicle, Advisor, VehicleModel, UserRole } from './types';
+import { DEMO_STORE_CODE, DEMO_STORE_NAME, DEMO_REGION_CODE, isPortfolioDemoStore } from './demo-store';
 import {
   FLEET_IMAGES,
   PREMIUM_LONG_WHEELBASE_TRIM,
@@ -306,6 +307,18 @@ export const stores: (StoreInfo & { region: string })[] = Object.values(STORE_CO
     region: store.region,
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
+
+/** Resolve a store code from server session or Try Demo to a catalog entry. */
+export function resolveStoreByCode(
+  storeCode: string,
+): (StoreInfo & { region: string }) | undefined {
+  const direct = stores.find((s) => s.code === storeCode);
+  if (direct) return direct;
+  if (isPortfolioDemoStore(storeCode) || storeCode === DEMO_STORE_CODE) {
+    return { code: DEMO_STORE_CODE, name: DEMO_STORE_NAME, region: DEMO_REGION_CODE };
+  }
+  return undefined;
+}
 
 /** Real showrooms only - excludes the isolated portfolio Demo Store. */
 export const loginStores: (StoreInfo & { region: string })[] = stores.filter(

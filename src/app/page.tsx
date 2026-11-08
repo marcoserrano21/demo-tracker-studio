@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, Suspense } from 'react';
 import type { Advisor, Store, UserRole, Vehicle } from '@/lib/types';
-import { stores as allStores } from '@/lib/data';
+import { resolveStoreByCode } from '@/lib/data';
 import StoreSelector from '@/components/store-selector';
 import Dashboard from '@/components/dashboard';
 import AdvisorSelectorDialog from '@/components/advisor-selector-dialog';
@@ -90,13 +90,23 @@ function HomePageContent() {
     };
   }, [firestore, currentStore, user]);
 
-  const handleStoreSelect = (storeCode: string) => {
-    const storeData = allStores.find((s) => s.code === storeCode);
-    if (!storeData) return;
-    setCurrentStore(storeData as Store);
+  const handleStoreSelect = (
+    storeCode: string,
+    options?: { demo?: boolean },
+  ): boolean => {
+    const storeData = resolveStoreByCode(storeCode);
+    if (!storeData) {
+      console.error('[store] Unknown store code:', storeCode);
+      return false;
+    }
+    if (options?.demo) {
+      setSessionItem(DDHUB_KEYS.demoMode, 'true');
+    }
+    setCurrentStore({ ...storeData, advisors: [], vehicles: [] } as Store);
     setUserRole('advisor');
-    setSessionItem(DDHUB_KEYS.store, storeCode);
+    setSessionItem(DDHUB_KEYS.store, storeData.code);
     sessionStorage.removeItem('notified-overdue-vehicles');
+    return true;
   };
 
   const handleAdvisorSelect = (advisor: Advisor) => {

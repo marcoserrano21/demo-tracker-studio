@@ -4,8 +4,8 @@ import { cookies, headers } from 'next/headers';
 import {
   verifyStorePassword,
   verifyManagerPassword,
-  getDemoStoreCredentials,
 } from '@/lib/auth/store-passwords';
+import { DEMO_STORE_CODE } from '@/lib/demo-store';
 import { canRequestManagerAccess } from '@/lib/demo-users';
 import { AUTH_RATE_LIMIT, consumeRateLimit } from '@/lib/auth/rate-limit';
 
@@ -130,9 +130,8 @@ export async function tryDemoStoreAccess(): Promise<{
   storeCode?: string;
   error?: string;
 }> {
-  const { storeCode } = getDemoStoreCredentials();
   const jar = await cookies();
-  jar.set(COOKIE_STORE, storeCode, cookieOptions());
+  jar.set(COOKIE_STORE, DEMO_STORE_CODE, cookieOptions());
   jar.delete(COOKIE_MANAGER);
-  return { success: true, storeCode };
+  return { success: true, storeCode: DEMO_STORE_CODE };
 }
